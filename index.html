@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Rappi Originals · Capital Efficiency Grid</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,500&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -1041,16 +1042,131 @@ function seedData() {
   return { hubs: [...DK_HUBS_SEED], brands };
 }
 
+// ---------- SUPABASE ----------
+const SUPABASE_URL = 'https://keksunzrhizgdhryymcv.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtla3N1bnpyaGl6Z2Rocnl5bWN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NjgzMTcsImV4cCI6MjA5MTM0NDMxN30.bPYjlz2gPtSmRbypSb71L_RBBQz4gzGp2hWPNj3nJqY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let _saveTimer = null;
+
 // ---------- PERSISTENCE ----------
 function saveAll() {
+  // Save to localStorage immediately (fast cache)
   try {
     const payload = {
       data: state.data,
       settings: { fx: state.fx, currency: state.currency, sheetsUrl: state.sheetsUrl, viewMode: state.viewMode }
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  } catch(e) { console.error('Save failed', e); }
+  } catch(e) { console.error('Local save failed', e); }
+
+  // Debounced save to Supabase (500ms)
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => saveToSupabase(), 500);
 }
+
+async function saveToSupabase() {
+  try {
+    const { brands, hubs } = state.data;
+
+    // Upsert hubs
+    if (hubs.length) {
+      await sb.from('hubs').upsert(hubs.map(h => ({ id: h.id, name: h.name, city: h.city })), { onConflict: 'id' });
+    }
+
+    // Upsert brands, stores, projections
+    for (const b of brands) {
+      await sb.from('brands').upsert({
+        id: b.id, name: b.name, operator: b.operator,
+        investment_usd: b.investmentUsd, baseline: b.baseline,
+        baseline_signed: b.baselineSigned, max_slots: b.maxSlots
+      }, { onConflict: 'id' });
+
+      // Replace stores for this brand
+      await sb.from('stores').delete().eq('brand_id', b.id);
+      if (b.stores.length) {
+        await sb.from('stores').insert(b.stores.map(s => ({
+          id: s.id, brand_id: b.id, name: s.name, type: s.type,
+          slot: s.slot, hub_id: s.hub_id, hub_name: s.hub_name,
+          city: s.city, gmv_mxn: s.gmv_mxn, take_rate_pct: s.take_rate_pct
+        })));
+      }
+
+      // Replace projections for this brand
+      await sb.from('projections').delete().eq('brand_id', b.id);
+      if ((b.projections || []).length) {
+        await sb.from('projections').insert(b.projections.map(p => ({
+          id: p.id, brand_id: b.id, column_type: p.column,
+          name: p.name, gmv_mxn: p.gmv_mxn,
+          take_rate_pct: p.take_rate_pct, open_date: p.open_date || null
+        })));
+      }
+    }
+
+    // Delete brands in DB that no longer exist locally
+    const localIds = brands.map(b => b.id);
+    const { data: dbBrands } = await sb.from('brands').select('id');
+    if (dbBrands) {
+      const toDelete = dbBrands.filter(r => !localIds.includes(r.id)).map(r => r.id);
+      if (toDelete.length) await sb.from('brands').delete().in('id', toDelete);
+    }
+
+    // Save settings
+    await sb.from('settings').upsert({
+      id: 1, fx: state.fx, currency: state.currency,
+      sheets_url: state.sheetsUrl, view_mode: state.viewMode,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'id' });
+
+    console.log('Supabase sync OK');
+  } catch(e) {
+    console.error('Supabase save failed', e);
+  }
+}
+
+async function loadFromSupabase() {
+  try {
+    const [hubsRes, brandsRes, storesRes, projRes, settRes] = await Promise.all([
+      sb.from('hubs').select('*'),
+      sb.from('brands').select('*'),
+      sb.from('stores').select('*'),
+      sb.from('projections').select('*'),
+      sb.from('settings').select('*').eq('id', 1).single()
+    ]);
+
+    if (!brandsRes.data || brandsRes.data.length === 0) return null;
+
+    const hubs = (hubsRes.data || []).map(h => ({ id: h.id, name: h.name, city: h.city }));
+    const brands = (brandsRes.data || []).map(b => ({
+      id: b.id, name: b.name, operator: b.operator,
+      investmentUsd: Number(b.investment_usd) || 0,
+      baseline: Number(b.baseline) || 0,
+      baselineSigned: b.baseline_signed,
+      maxSlots: b.max_slots || 10,
+      stores: (storesRes.data || []).filter(s => s.brand_id === b.id).map(s => ({
+        id: s.id, name: s.name, type: s.type, slot: s.slot,
+        hub_id: s.hub_id, hub_name: s.hub_name, city: s.city,
+        gmv_mxn: Number(s.gmv_mxn) || 0, take_rate_pct: Number(s.take_rate_pct) || 0
+      })),
+      projections: (projRes.data || []).filter(p => p.brand_id === b.id).map(p => ({
+        id: p.id, column: p.column_type, name: p.name,
+        gmv_mxn: Number(p.gmv_mxn) || 0, take_rate_pct: Number(p.take_rate_pct) || 0,
+        open_date: p.open_date
+      }))
+    }));
+
+    const settings = settRes.data ? {
+      fx: Number(settRes.data.fx) || 20, currency: settRes.data.currency || 'usd',
+      sheetsUrl: settRes.data.sheets_url || '', viewMode: settRes.data.view_mode || 'actual'
+    } : null;
+
+    return { data: { hubs, brands }, settings };
+  } catch(e) {
+    console.error('Supabase load failed', e);
+    return null;
+  }
+}
+
 function loadAll() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY); if (!raw) return null;
@@ -2136,15 +2252,16 @@ document.getElementById('btn-sync').addEventListener('click', syncToSheets);
 document.getElementById('btn-load').addEventListener('click', loadFromSheets);
 
 // ---- INIT ----
-(function init() {
-  const loaded = loadAll();
-  if (loaded && loaded.data && loaded.data.brands && loaded.data.hubs) {
-    state.data = loaded.data;
-    if (loaded.settings) {
-      if (loaded.settings.fx) state.fx = loaded.settings.fx;
-      if (loaded.settings.currency) state.currency = loaded.settings.currency;
-      if (loaded.settings.sheetsUrl) state.sheetsUrl = loaded.settings.sheetsUrl;
-      if (loaded.settings.viewMode) state.viewMode = loaded.settings.viewMode;
+(async function init() {
+  // 1. Try localStorage first for instant render
+  const cached = loadAll();
+  if (cached && cached.data && cached.data.brands && cached.data.hubs) {
+    state.data = cached.data;
+    if (cached.settings) {
+      if (cached.settings.fx) state.fx = cached.settings.fx;
+      if (cached.settings.currency) state.currency = cached.settings.currency;
+      if (cached.settings.sheetsUrl) state.sheetsUrl = cached.settings.sheetsUrl;
+      if (cached.settings.viewMode) state.viewMode = cached.settings.viewMode;
     }
   } else {
     state.data = seedData();
@@ -2155,6 +2272,33 @@ document.getElementById('btn-load').addEventListener('click', loadFromSheets);
   document.querySelectorAll('.ccy-btn').forEach(b => b.classList.toggle('active', b.dataset.ccy === state.currency));
   if (state.sheetsUrl) document.getElementById('sheets-url-input').value = state.sheetsUrl;
   setViewMode(state.viewMode);
+
+  // 2. Then try Supabase — if data exists there, use it and re-render
+  try {
+    const remote = await loadFromSupabase();
+    if (remote && remote.data && remote.data.brands && remote.data.brands.length > 0) {
+      state.data = remote.data;
+      if (remote.settings) {
+        if (remote.settings.fx) state.fx = remote.settings.fx;
+        if (remote.settings.currency) state.currency = remote.settings.currency;
+        if (remote.settings.sheetsUrl) state.sheetsUrl = remote.settings.sheetsUrl;
+        if (remote.settings.viewMode) state.viewMode = remote.settings.viewMode;
+      }
+      document.getElementById('fx-input').value = state.fx.toFixed(2);
+      document.querySelectorAll('.ccy-btn').forEach(b => b.classList.toggle('active', b.dataset.ccy === state.currency));
+      if (state.sheetsUrl) document.getElementById('sheets-url-input').value = state.sheetsUrl;
+      setViewMode(state.viewMode);
+      // Update localStorage cache
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ data: state.data, settings: { fx: state.fx, currency: state.currency, sheetsUrl: state.sheetsUrl, viewMode: state.viewMode } }));
+      console.log('Loaded from Supabase');
+    } else {
+      // No data in Supabase yet — push local/seed data up
+      saveToSupabase();
+      console.log('Seeded Supabase with local data');
+    }
+  } catch(e) {
+    console.log('Supabase unavailable, using local data', e);
+  }
 })();
 </script>
 
