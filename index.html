@@ -1,0 +1,2162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rappi Originals · Capital Efficiency Grid</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,500&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #0f0e0d; --ink-soft: #2b2826; --paper: #f5f1ea; --paper-warm: #ede6d9;
+    --paper-deep: #e4dbc9; --rule: #1a1817; --accent: #ff4a1c; --accent-dk: #c3340f;
+    --baseline: #3a7d5f; --baseline-dk: #2d5f48;
+    --projected: #8b6fb8; --projected-dk: #5f4888;
+    --investment: #1a4d6e; --investment-dk: #0f334a;
+    --bm: #1a1817; --dk: #c26b2d;
+    --muted: #7a736a;
+    --hairline: rgba(26,24,23,0.12); --hairline-strong: rgba(26,24,23,0.25);
+    --empty: rgba(26,24,23,0.03);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--paper); color: var(--ink);
+    font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.45;
+    -webkit-font-smoothing: antialiased; min-height: 100vh;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(0,0,0,0.015) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(0,0,0,0.02) 0%, transparent 50%);
+    pointer-events: none; z-index: 0;
+  }
+  .container { max-width: 1820px; margin: 0 auto; padding: 24px 32px 60px; position: relative; z-index: 1; }
+
+  header.masthead {
+    border-bottom: 2px solid var(--rule); padding-bottom: 16px; margin-bottom: 16px;
+    display: grid; grid-template-columns: auto 1fr auto; align-items: end; gap: 32px;
+  }
+  .brand-lockup {
+    font-family: 'Fraunces', serif; font-weight: 900; font-size: 32px;
+    line-height: 0.95; letter-spacing: -0.02em; font-variation-settings: 'opsz' 144;
+  }
+  .brand-lockup em { font-style: italic; font-weight: 500; color: var(--accent); }
+  .tagline {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted);
+    text-align: center; padding-bottom: 4px;
+  }
+  .tagline strong { color: var(--ink); font-weight: 700; }
+  .meta {
+    text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted);
+  }
+  .meta .period { color: var(--ink); font-weight: 700; font-size: 11px; }
+
+  /* Master toolbar: sync, FX, view mode all in one */
+  .toolbar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px; padding: 10px 14px;
+    background: var(--paper-warm); border: 1px solid var(--hairline-strong);
+    flex-wrap: wrap; gap: 12px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .toolbar-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .toolbar label { color: var(--muted); }
+  .toolbar input[type="number"], .toolbar input[type="text"] {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    padding: 4px 8px; border: 1px solid var(--hairline-strong);
+    background: var(--paper); color: var(--ink); text-align: center;
+  }
+  .toolbar input:focus { outline: none; border-color: var(--investment); }
+  #sheets-url-input { width: 280px; text-align: left; }
+  .ccy-toggle { display: flex; border: 1px solid var(--rule); padding: 1px; background: var(--paper); }
+  .ccy-btn {
+    padding: 4px 12px; font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+    background: transparent; border: none; cursor: pointer; color: var(--ink-soft);
+  }
+  .ccy-btn.active { background: var(--ink); color: var(--paper); }
+  .sync-btn {
+    padding: 6px 14px; font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+    background: var(--baseline); color: var(--paper); border: 1px solid var(--baseline-dk);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .sync-btn:hover { background: var(--baseline-dk); }
+  .sync-btn.loading { opacity: 0.6; pointer-events: none; }
+  .load-btn {
+    padding: 6px 14px; font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+    background: transparent; color: var(--ink); border: 1px solid var(--rule);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .load-btn:hover { background: var(--ink); color: var(--paper); }
+  .sync-status {
+    font-size: 9px; color: var(--muted); letter-spacing: 0.08em;
+  }
+  .sync-status.ok { color: var(--baseline); font-weight: 700; }
+  .sync-status.err { color: var(--accent-dk); font-weight: 700; }
+
+  .view-mode-bar {
+    display: flex; gap: 0; margin-bottom: 12px;
+    border: 1px solid var(--rule); padding: 2px;
+    background: var(--paper-warm); width: fit-content;
+  }
+  .view-mode-btn {
+    padding: 8px 18px; font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
+    background: transparent; border: none; cursor: pointer; color: var(--ink-soft);
+    transition: all 0.15s;
+  }
+  .view-mode-btn.active { background: var(--ink); color: var(--paper); }
+  .view-mode-btn.planned.active { background: var(--projected); color: var(--paper); }
+
+  .goal-banner {
+    background: var(--ink); color: var(--paper);
+    padding: 20px 24px; margin-bottom: 14px;
+    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 22px;
+    align-items: center; position: relative; overflow: hidden;
+  }
+  .goal-banner::after {
+    content: ''; position: absolute; right: -60px; bottom: -60px;
+    width: 240px; height: 240px; border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 50%; pointer-events: none;
+  }
+  .goal-banner.planned-mode { background: linear-gradient(135deg, #1a0f2e 0%, #0f0e0d 100%); }
+  .goal-stat { position: relative; z-index: 1; }
+  .goal-stat .label {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    text-transform: uppercase; letter-spacing: 0.15em;
+    color: rgba(245,241,234,0.55); margin-bottom: 5px;
+  }
+  .goal-stat .value {
+    font-family: 'Fraunces', serif; font-weight: 500; font-size: 28px;
+    line-height: 1; letter-spacing: -0.03em; font-variation-settings: 'opsz' 144;
+  }
+  .goal-stat .value.primary { font-weight: 900; color: var(--accent); }
+  .goal-stat .value.projected-color { color: #c8a9e8; }
+  .goal-stat .value.capital-color { color: #7fb3d5; }
+  .goal-stat .sub {
+    font-family: 'JetBrains Mono', monospace; font-size: 9.5px;
+    color: rgba(245,241,234,0.7); margin-top: 4px;
+  }
+  .goal-stat .sub.pos { color: #7ad49f; }
+  .goal-stat .sub.neg { color: #f4a07a; }
+
+  .progress-ribbon { grid-column: 1 / -1; margin-top: 4px; }
+  .progress-track {
+    height: 10px; background: rgba(245,241,234,0.08);
+    position: relative; overflow: hidden; display: flex;
+  }
+  .progress-fill { height: 100%; transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .progress-fill.baseline { background: var(--baseline); }
+  .progress-fill.growth { background: var(--accent); }
+  .progress-fill.projected {
+    background: var(--projected);
+    background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.25) 0, rgba(255,255,255,0.25) 3px, transparent 3px, transparent 6px);
+  }
+  .progress-markers {
+    display: flex; justify-content: space-between; margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    text-transform: uppercase; letter-spacing: 0.12em; color: rgba(245,241,234,0.5);
+  }
+  .progress-legend {
+    display: flex; gap: 16px; margin-top: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: rgba(245,241,234,0.7); flex-wrap: wrap;
+  }
+  .progress-legend .swatch { width: 8px; height: 8px; display: inline-block; margin-right: 6px; }
+  .progress-legend .swatch.projected {
+    background: var(--projected);
+    background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.25) 0, rgba(255,255,255,0.25) 2px, transparent 2px, transparent 4px);
+  }
+
+  .controls {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--hairline);
+    margin-bottom: 16px; flex-wrap: wrap; gap: 12px;
+  }
+  .filter-group { display: flex; gap: 4px; align-items: center; }
+  .filter-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--muted); margin-right: 10px;
+  }
+  .chip {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500;
+    padding: 5px 10px; border: 1px solid var(--hairline);
+    background: transparent; cursor: pointer;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--ink-soft); transition: all 0.15s;
+  }
+  .chip:hover { border-color: var(--ink); }
+  .chip.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .chip.danger:hover { border-color: var(--accent-dk); color: var(--accent-dk); }
+  .chip.primary {
+    background: var(--projected); color: var(--paper); border-color: var(--projected);
+  }
+  .chip.primary:hover { background: var(--projected-dk); }
+
+  .grid-wrapper {
+    background: var(--paper); border: 1px solid var(--hairline-strong);
+    overflow-x: auto; position: relative;
+  }
+  .grid { display: grid; min-width: 100%; }
+
+  .corner-cell {
+    background: var(--ink); color: var(--paper);
+    padding: 12px 14px; font-family: 'Fraunces', serif;
+    font-weight: 500; font-style: italic; font-size: 14px;
+    font-variation-settings: 'opsz' 144;
+    display: flex; align-items: flex-end;
+    border-right: 2px solid var(--rule); border-bottom: 2px solid var(--rule);
+    position: sticky; left: 0; z-index: 5;
+  }
+
+  .col-header {
+    padding: 8px 6px; background: var(--paper-warm);
+    border-right: 1px solid var(--hairline); border-bottom: 2px solid var(--rule);
+    text-align: center; font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--ink-soft); position: relative;
+  }
+  .col-header.type-investment {
+    background: var(--investment); color: var(--paper); border-right: 3px solid var(--rule);
+  }
+  .col-header.type-investment .col-title { color: var(--paper); }
+  .col-header.type-investment .col-sub { color: rgba(245,241,234,0.7); }
+  .col-header.type-investment .col-total { color: #bfdbee; }
+  .col-header.type-baseline {
+    background: var(--baseline); color: var(--paper); border-right: 3px solid var(--rule);
+  }
+  .col-header.type-baseline .col-title { color: var(--paper); }
+  .col-header.type-baseline .col-sub { color: rgba(245,241,234,0.7); }
+  .col-header.type-bm { background: var(--paper-deep); }
+  .col-header.type-bm-group-start { border-left: 3px solid var(--rule); }
+  .col-header.type-dk-group-start { border-left: 3px solid var(--rule); }
+  .col-header.type-dk { background: var(--paper-deep); cursor: pointer; }
+  .col-header.type-dk:hover { background: var(--paper-warm); }
+  .col-header.type-metric {
+    background: var(--ink); color: var(--paper); border-left: 3px solid var(--rule);
+  }
+  .col-header.type-metric .col-title { color: var(--paper); }
+  .col-header.type-metric .col-sub { color: rgba(245,241,234,0.6); }
+  .col-header .col-title {
+    font-weight: 700; font-size: 10px; color: var(--ink);
+    display: block; margin-bottom: 2px; letter-spacing: 0.1em;
+  }
+  .col-header .col-sub { font-size: 8.5px; color: var(--muted); display: block; line-height: 1.2; }
+  .col-header .col-total {
+    display: block; font-family: 'Fraunces', serif;
+    font-style: italic; font-weight: 500; font-size: 12px;
+    margin-top: 3px; font-variation-settings: 'opsz' 144; color: var(--accent);
+  }
+  .col-header.type-baseline .col-total { color: var(--paper); }
+  .col-header .projected-mini {
+    font-family: 'JetBrains Mono', monospace; font-size: 8px;
+    color: var(--projected); margin-top: 2px; display: block;
+  }
+  .col-edit-hint {
+    position: absolute; top: 2px; right: 4px; font-size: 9px;
+    opacity: 0; transition: opacity 0.15s; color: var(--projected);
+  }
+  .col-header.type-dk:hover .col-edit-hint { opacity: 1; }
+
+  /* Add DK column — at the end */
+  .add-dk-col {
+    background: var(--paper);
+    border: 2px dashed var(--hairline-strong);
+    border-bottom: 2px solid var(--rule);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.15s;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .add-dk-col:hover { background: rgba(139, 111, 184, 0.08); color: var(--projected); border-color: var(--projected); }
+
+  .row-header {
+    padding: 10px 12px; background: var(--paper-warm);
+    border-right: 2px solid var(--rule); border-bottom: 1px solid var(--hairline);
+    position: sticky; left: 0; z-index: 4;
+    display: flex; flex-direction: column; justify-content: center;
+    min-width: 200px; cursor: pointer;
+  }
+  .row-header:hover { background: var(--paper-deep); }
+  .row-header .brand-name {
+    font-family: 'Fraunces', serif; font-weight: 700; font-size: 16px;
+    letter-spacing: -0.015em; font-variation-settings: 'opsz' 144; line-height: 1.1;
+  }
+  .row-header .brand-op {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px;
+  }
+  .row-header .brand-mrr {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    color: var(--ink); margin-top: 6px; display: flex; align-items: center;
+    gap: 8px; justify-content: space-between;
+  }
+  .row-header .brand-mrr .pct { color: var(--accent); font-weight: 500; }
+  .row-header .brand-proj {
+    font-family: 'JetBrains Mono', monospace; font-size: 9.5px;
+    color: var(--projected); margin-top: 3px; font-weight: 500;
+  }
+  .row-header .edit-hint {
+    position: absolute; top: 4px; right: 6px; font-size: 9px;
+    color: var(--projected); opacity: 0; transition: opacity 0.15s;
+  }
+  .row-header:hover .edit-hint { opacity: 1; }
+
+  .toggle-baseline {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 8.5px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); margin-top: 6px; cursor: pointer; user-select: none;
+    padding: 3px 6px; border: 1px solid var(--hairline);
+    background: var(--paper); transition: all 0.15s; width: fit-content;
+  }
+  .toggle-baseline:hover { border-color: var(--baseline); }
+  .toggle-baseline.active {
+    background: var(--baseline); color: var(--paper); border-color: var(--baseline);
+  }
+  .toggle-baseline .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--hairline-strong); transition: background 0.15s;
+  }
+  .toggle-baseline.active .dot { background: var(--paper); }
+
+  /* Add brand row at the end */
+  .add-brand-row {
+    padding: 14px; background: var(--paper);
+    border-right: 2px solid var(--rule); border-top: 1px dashed var(--hairline-strong);
+    border-bottom: 1px solid var(--hairline);
+    position: sticky; left: 0; z-index: 4;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.15s;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    font-weight: 700; color: var(--muted); letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .add-brand-row:hover { background: rgba(139, 111, 184, 0.08); color: var(--projected); }
+  .add-brand-row-placeholder {
+    border-top: 1px dashed var(--hairline-strong);
+    border-bottom: 1px solid var(--hairline);
+    background: var(--paper);
+  }
+
+  .cell {
+    border-right: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline);
+    padding: 4px; min-height: 75px; position: relative;
+    display: flex; flex-wrap: wrap; gap: 2px;
+    align-items: flex-start; align-content: flex-start; background: var(--paper);
+  }
+  .cell.bm-start { border-left: 3px solid var(--rule); }
+  .cell.dk-start { border-left: 3px solid var(--rule); }
+  .cell.empty {
+    background: var(--empty);
+    background-image: linear-gradient(135deg, transparent 49%, var(--hairline) 49%, var(--hairline) 51%, transparent 51%);
+    background-size: 12px 12px;
+  }
+  .cell.empty::after {
+    content: '—'; position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--hairline-strong); font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  }
+
+  .cell.investment-cell {
+    background: rgba(26, 77, 110, 0.04);
+    border-right: 3px solid var(--rule); padding: 10px;
+    display: flex; flex-direction: column; justify-content: center;
+    align-items: stretch; cursor: text;
+  }
+  .cell.investment-cell:hover { background: rgba(26, 77, 110, 0.08); }
+  .cell.investment-cell input {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700;
+    padding: 6px 8px; border: 1px solid transparent; background: transparent;
+    color: var(--investment); text-align: right; width: 100%;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .cell.investment-cell input:focus {
+    outline: none; border-color: var(--investment); background: var(--paper);
+  }
+  .cell.investment-cell input::placeholder { color: var(--muted); font-weight: 400; }
+  .cell.investment-cell .currency-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--muted);
+    text-align: right; margin-top: 3px;
+    text-transform: uppercase; letter-spacing: 0.14em;
+  }
+
+  .cell.baseline-cell {
+    background: rgba(58, 125, 95, 0.05); border-right: 3px solid var(--rule);
+  }
+  .cell.baseline-cell.excluded {
+    background: rgba(58, 125, 95, 0.02);
+    background-image: repeating-linear-gradient(-45deg, transparent 0, transparent 6px, rgba(58,125,95,0.08) 6px, rgba(58,125,95,0.08) 7px);
+  }
+  .cell.has-projected {
+    background: linear-gradient(to bottom, var(--paper) 0%, rgba(139, 111, 184, 0.06) 100%);
+  }
+  .cell.only-projected { background: rgba(139, 111, 184, 0.08); }
+
+  .cell-total {
+    position: absolute; top: 3px; right: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
+    color: var(--ink); background: rgba(245,241,234,0.95);
+    padding: 1px 4px; border-radius: 2px; z-index: 2; pointer-events: none;
+  }
+  .cell.empty .cell-total { display: none; }
+
+  .store-block {
+    background: var(--bm); cursor: pointer;
+    transition: transform 0.12s, filter 0.12s, box-shadow 0.12s;
+    position: relative; min-width: 14px; min-height: 14px; border-radius: 1px;
+  }
+  .store-block.baseline { background: var(--baseline); }
+  .store-block.baseline.excluded {
+    opacity: 0.4;
+    background-image: repeating-linear-gradient(-45deg, rgba(0,0,0,0.25) 0, rgba(0,0,0,0.25) 1px, transparent 1px, transparent 3px);
+  }
+  .store-block.dk {
+    background: var(--dk);
+    background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.2) 0, rgba(255,255,255,0.2) 2px, transparent 2px, transparent 4px);
+  }
+  .store-block.projected {
+    background: var(--projected);
+    background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.3) 0, rgba(255,255,255,0.3) 2px, transparent 2px, transparent 4px);
+    outline: 1.5px dashed var(--projected-dk); outline-offset: -1px;
+  }
+  .store-block.tier-low { opacity: 0.55; }
+  .store-block.tier-mid { opacity: 0.78; }
+  .store-block.tier-high { opacity: 1; }
+  .store-block.baseline.excluded { opacity: 0.4 !important; }
+  .store-block:hover {
+    transform: scale(1.08); filter: brightness(1.15);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25); z-index: 10;
+  }
+
+  .cell.slot-empty {
+    background: var(--empty);
+    background-image:
+      repeating-linear-gradient(0deg, var(--hairline) 0, var(--hairline) 1px, transparent 1px, transparent 8px),
+      repeating-linear-gradient(90deg, var(--hairline) 0, var(--hairline) 1px, transparent 1px, transparent 8px);
+    cursor: pointer; transition: background-color 0.15s;
+  }
+  .cell.slot-empty:hover { background-color: rgba(139, 111, 184, 0.12); }
+  .cell.slot-empty::after {
+    content: '+'; position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--hairline-strong); font-family: 'JetBrains Mono', monospace;
+    font-size: 20px; font-weight: 300; transition: color 0.15s, transform 0.15s;
+  }
+  .cell.slot-empty:hover::after { color: var(--projected); transform: scale(1.3); }
+
+  /* Add B&M slot button — last column after all BM slots per brand */
+  .cell.add-bm-slot {
+    background: rgba(139, 111, 184, 0.04);
+    border: 2px dashed var(--hairline-strong);
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .cell.add-bm-slot:hover {
+    background: rgba(139, 111, 184, 0.12); color: var(--projected); border-color: var(--projected);
+  }
+
+  .cell.metric-cell {
+    background: var(--paper-warm); border-left: 3px solid var(--rule);
+    padding: 8px 10px; display: flex; flex-direction: column;
+    justify-content: center; align-items: stretch; text-align: right; min-height: 75px;
+  }
+  .metric-mrr {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--ink);
+  }
+  .metric-mrr .pct {
+    color: var(--accent); font-weight: 500; font-size: 10px; margin-left: 4px;
+  }
+  .metric-multiple {
+    font-family: 'Fraunces', serif; font-weight: 700; font-size: 18px;
+    font-variation-settings: 'opsz' 144; margin-top: 4px; line-height: 1;
+    color: var(--investment);
+  }
+  .metric-multiple.low { color: var(--accent-dk); }
+  .metric-multiple.mid { color: #b47a00; }
+  .metric-multiple.high { color: var(--baseline); }
+  .metric-multiple.null { color: var(--muted); font-style: italic; font-size: 14px; }
+  .metric-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 8px;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; margin-top: 1px;
+  }
+  .metric-payback {
+    font-family: 'JetBrains Mono', monospace; font-size: 9.5px;
+    color: var(--ink-soft); margin-top: 4px; font-weight: 500;
+  }
+  .metric-payback.good { color: var(--baseline); font-weight: 700; }
+  .metric-payback.bad { color: var(--accent-dk); font-weight: 700; }
+
+  .tooltip {
+    position: fixed; background: var(--ink); color: var(--paper);
+    padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    pointer-events: none; z-index: 100; opacity: 0; transition: opacity 0.15s;
+    min-width: 220px; box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+  .tooltip.visible { opacity: 1; }
+  .tooltip .tt-title {
+    font-family: 'Fraunces', serif; font-style: italic; font-weight: 500;
+    font-size: 13px; font-variation-settings: 'opsz' 144;
+    margin-bottom: 4px; color: var(--paper);
+  }
+  .tooltip .tt-row {
+    display: flex; justify-content: space-between; gap: 16px; margin-top: 3px;
+    color: rgba(245,241,234,0.75);
+  }
+  .tooltip .tt-row strong { color: var(--paper); font-weight: 700; }
+  .tooltip .tt-type {
+    color: var(--accent); font-size: 9px; letter-spacing: 0.12em;
+    text-transform: uppercase; margin-bottom: 6px; padding-bottom: 6px;
+    border-bottom: 1px solid rgba(245,241,234,0.2);
+  }
+  .tooltip .tt-type.baseline { color: #7ad49f; }
+  .tooltip .tt-type.projected { color: #c8a9e8; }
+  .tooltip .tt-excluded {
+    margin-top: 8px; padding: 4px 6px;
+    background: rgba(245,241,234,0.1);
+    font-size: 9px; letter-spacing: 0.1em;
+    color: rgba(245,241,234,0.7); text-transform: uppercase;
+  }
+
+  .row-total {
+    padding: 10px 6px; background: var(--paper-warm);
+    border-right: 1px solid var(--hairline); border-top: 2px solid var(--rule);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    text-align: center; color: var(--ink);
+  }
+  .row-total.investment-col { background: var(--investment); color: var(--paper); border-right: 3px solid var(--rule); }
+  .row-total.investment-col .sub { color: rgba(245,241,234,0.7); }
+  .row-total.baseline-col { background: var(--baseline); color: var(--paper); border-right: 3px solid var(--rule); }
+  .row-total.baseline-col .sub { color: rgba(245,241,234,0.7); }
+  .row-total .sub {
+    display: block; font-size: 9px; color: var(--muted); font-weight: 400;
+    text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px;
+  }
+  .row-total .proj-sub {
+    display: block; font-size: 9px; color: var(--projected); font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.08em; margin-top: 1px;
+  }
+  .row-total.grand {
+    background: var(--ink); color: var(--paper);
+    position: sticky; left: 0; z-index: 4; border-right: 2px solid var(--rule);
+    font-family: 'Fraunces', serif; font-weight: 700; font-style: italic;
+    font-size: 15px; font-variation-settings: 'opsz' 144;
+  }
+  .row-total.grand .sub { color: rgba(245,241,234,0.6); font-family: 'JetBrains Mono', monospace; font-style: normal; }
+
+  /* Modals */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(15, 14, 13, 0.6);
+    backdrop-filter: blur(4px); z-index: 200;
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-backdrop.visible { display: flex; }
+  .modal {
+    background: var(--paper); max-width: 480px; width: 100%;
+    padding: 32px; border: 2px solid var(--rule);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+    position: relative; max-height: 90vh; overflow-y: auto;
+  }
+  .modal::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: var(--projected);
+  }
+  .modal.mode-brand::before { background: var(--investment); }
+  .modal.mode-dk::before { background: var(--dk); }
+  .modal-header {
+    font-family: 'Fraunces', serif; font-weight: 900; font-size: 24px;
+    letter-spacing: -0.015em; font-variation-settings: 'opsz' 144; margin-bottom: 6px;
+  }
+  .modal-header em { font-style: italic; font-weight: 500; color: var(--projected); }
+  .modal.mode-brand .modal-header em { color: var(--investment); }
+  .modal.mode-dk .modal-header em { color: var(--dk); }
+  .modal-sub {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.15em;
+    color: var(--muted); margin-bottom: 24px;
+  }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .modal-field { display: flex; flex-direction: column; }
+  .modal-field.full { grid-column: 1 / -1; }
+  .modal-field label {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--muted); margin-bottom: 6px; font-weight: 700;
+  }
+  .modal-field input {
+    font-family: 'Inter', sans-serif; font-size: 14px;
+    padding: 10px 12px; border: 1px solid var(--hairline-strong);
+    background: var(--paper); color: var(--ink); transition: border-color 0.15s;
+  }
+  .modal-field input:focus {
+    outline: none; border-color: var(--projected);
+    box-shadow: 0 0 0 2px rgba(139, 111, 184, 0.15);
+  }
+  .modal.mode-brand .modal-field input:focus { border-color: var(--investment); box-shadow: 0 0 0 2px rgba(26, 77, 110, 0.15); }
+  .modal.mode-dk .modal-field input:focus { border-color: var(--dk); box-shadow: 0 0 0 2px rgba(194, 107, 45, 0.15); }
+  .modal-field .hint {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: var(--muted); margin-top: 4px; letter-spacing: 0.08em;
+  }
+  .modal-field input[type="checkbox"] { width: auto; margin-right: 8px; }
+  .modal-checkbox-label {
+    display: flex; align-items: center; cursor: pointer;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--ink); padding: 4px 0;
+  }
+  .modal-calc {
+    margin-top: 16px; padding: 12px 16px;
+    background: var(--paper-warm); border-left: 3px solid var(--projected);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .modal-calc strong {
+    font-family: 'Fraunces', serif; font-weight: 700; font-size: 16px;
+    color: var(--projected); font-variation-settings: 'opsz' 144;
+  }
+  .modal-actions { display: flex; justify-content: space-between; margin-top: 24px; gap: 12px; }
+  .btn {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    padding: 10px 20px; border: 1px solid var(--rule);
+    background: transparent; color: var(--ink); cursor: pointer;
+    text-transform: uppercase; letter-spacing: 0.12em; transition: all 0.15s;
+  }
+  .btn:hover { background: var(--ink); color: var(--paper); }
+  .btn.primary { background: var(--projected); color: var(--paper); border-color: var(--projected); }
+  .btn.primary:hover { background: var(--projected-dk); border-color: var(--projected-dk); }
+  .modal.mode-brand .btn.primary { background: var(--investment); border-color: var(--investment); }
+  .modal.mode-brand .btn.primary:hover { background: var(--investment-dk); border-color: var(--investment-dk); }
+  .modal.mode-dk .btn.primary { background: var(--dk); border-color: var(--dk); }
+  .btn.danger { color: var(--accent-dk); border-color: var(--hairline-strong); }
+  .btn.danger:hover { background: var(--accent-dk); color: var(--paper); border-color: var(--accent-dk); }
+
+  .footer-summary {
+    margin-top: 32px; padding-top: 20px; border-top: 2px solid var(--rule);
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 18px;
+  }
+  .summary-stat .label {
+    font-family: 'JetBrains Mono', monospace; font-size: 9.5px;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--muted); margin-bottom: 6px;
+  }
+  .summary-stat .value {
+    font-family: 'Fraunces', serif; font-weight: 700; font-size: 22px;
+    letter-spacing: -0.02em; font-variation-settings: 'opsz' 144;
+  }
+  .summary-stat .value.baseline-color { color: var(--baseline); }
+  .summary-stat .value.growth-color { color: var(--accent); }
+  .summary-stat .value.projected-color { color: var(--projected); }
+  .summary-stat .value.investment-color { color: var(--investment); }
+  .summary-stat .breakdown {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--ink-soft); margin-top: 4px;
+  }
+
+  .footnote {
+    margin-top: 28px; padding-top: 12px; border-top: 1px solid var(--hairline);
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em;
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+  }
+  .storage-indicator { color: var(--projected); font-weight: 700; }
+
+  /* Toast notifications */
+  .toast {
+    position: fixed; bottom: 20px; right: 20px;
+    background: var(--ink); color: var(--paper);
+    padding: 14px 20px; z-index: 300;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    border-left: 4px solid var(--baseline);
+    animation: slideIn 0.25s ease-out;
+  }
+  .toast.err { border-left-color: var(--accent-dk); }
+  .toast.warn { border-left-color: #b47a00; }
+  @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  .baseline-strip, .pipeline-strip {
+    padding: 10px 16px; margin-bottom: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .baseline-strip { background: var(--paper-warm); border-left: 4px solid var(--baseline); }
+  .baseline-strip strong {
+    font-family: 'Fraunces', serif; font-weight: 700; font-size: 15px;
+    font-variation-settings: 'opsz' 144; color: var(--baseline);
+  }
+  .baseline-strip .incremental strong { color: var(--accent); }
+  .pipeline-strip {
+    background: rgba(139, 111, 184, 0.08);
+    border-left: 4px solid var(--projected); margin-bottom: 20px;
+  }
+  .pipeline-strip strong {
+    font-family: 'Fraunces', serif; font-weight: 700; font-size: 15px;
+    font-variation-settings: 'opsz' 144; color: var(--projected);
+  }
+  .pipeline-strip .hint {
+    font-size: 10px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header class="masthead">
+    <div class="brand-lockup">Rappi<em>Originals</em><sup style="font-size: 13px; font-weight: 500; color: var(--muted); font-family: 'JetBrains Mono', monospace; vertical-align: super; margin-left: 6px;">MX</sup></div>
+    <div class="tagline">Capital <strong>Efficiency Grid</strong> · Full CRUD · $20M by Feb 2027</div>
+    <div class="meta">
+      <div class="period" id="period-label">April 2026 · MTD</div>
+      <div style="margin-top: 2px;">Updated <span id="updated-ts">—</span></div>
+    </div>
+  </header>
+
+  <!-- Unified toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <label>Sheets URL</label>
+      <input type="text" id="sheets-url-input" placeholder="https://script.google.com/macros/s/.../exec" />
+      <button class="sync-btn" id="btn-sync">⇄ Sync to Sheets</button>
+      <button class="load-btn" id="btn-load">↓ Load from Sheets</button>
+      <span class="sync-status" id="sync-status">Not connected</span>
+    </div>
+    <div class="toolbar-group">
+      <label>Currency</label>
+      <div class="ccy-toggle">
+        <button class="ccy-btn active" data-ccy="usd">USD</button>
+        <button class="ccy-btn" data-ccy="mxn">MXN</button>
+      </div>
+      <label style="margin-left:10px;">FX</label>
+      <span style="color: var(--muted);">1 USD =</span>
+      <input type="number" id="fx-input" value="20.00" step="0.10" min="1" max="100" style="width:70px;" />
+      <span style="color: var(--muted);">MXN</span>
+    </div>
+  </div>
+
+  <div class="view-mode-bar">
+    <button class="view-mode-btn active" id="mode-actual">◉ Actual</button>
+    <button class="view-mode-btn planned" id="mode-planned">✦ Actual + Planeado</button>
+  </div>
+
+  <section class="goal-banner" id="goal-banner">
+    <div class="goal-stat">
+      <div class="label" id="kpi-current-label">MRR Actual</div>
+      <div class="value primary" id="kpi-current">$0.0M</div>
+      <div class="sub" id="kpi-current-sub">— MXN</div>
+    </div>
+    <div class="goal-stat">
+      <div class="label">Meta · Feb 2027</div>
+      <div class="value" id="kpi-goal">$20.0M</div>
+      <div class="sub">10 meses para meta</div>
+    </div>
+    <div class="goal-stat">
+      <div class="label" id="kpi-gap-label">Gap a Meta</div>
+      <div class="value" id="kpi-gap">$0.0M</div>
+      <div class="sub neg" id="kpi-gap-sub">— MoM growth req.</div>
+    </div>
+    <div class="goal-stat">
+      <div class="label">Total Invested</div>
+      <div class="value capital-color" id="kpi-invested">$0</div>
+      <div class="sub" id="kpi-invested-sub">Year-1 USD capital</div>
+    </div>
+    <div class="goal-stat">
+      <div class="label">Capital Efficiency</div>
+      <div class="value capital-color" id="kpi-efficiency">—</div>
+      <div class="sub" id="kpi-efficiency-sub">MRR / Invested</div>
+    </div>
+
+    <div class="progress-ribbon">
+      <div class="progress-track">
+        <div class="progress-fill baseline" id="progress-baseline" style="width: 0%"></div>
+        <div class="progress-fill growth" id="progress-growth" style="width: 0%"></div>
+        <div class="progress-fill projected" id="progress-projected" style="width: 0%"></div>
+      </div>
+      <div class="progress-markers">
+        <span>$0</span><span>25%</span><span>50%</span><span>75%</span><span>$20M · FEB '27</span>
+      </div>
+      <div class="progress-legend">
+        <span><span class="swatch" style="background: var(--baseline);"></span>Baseline firmada</span>
+        <span><span class="swatch" style="background: var(--accent);"></span>Growth actual</span>
+        <span><span class="swatch projected"></span>Pipeline planeado</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="baseline-strip">
+    <span><span style="color: var(--muted);">Baseline total</span> · <strong id="bs-total">$0.0M</strong></span>
+    <span><span style="color: var(--muted);">Firmada</span> · <strong id="bs-signed">$0.0M</strong> <span id="bs-signed-count" style="color: var(--muted);">(0)</span></span>
+    <span><span style="color: var(--muted);">Excluida</span> · <strong id="bs-excluded" style="color: var(--muted);">$0.0M</strong> <span id="bs-excluded-count" style="color: var(--muted);">(0)</span></span>
+    <span class="incremental"><span style="color: var(--muted);">Growth incremental</span> · <strong id="bs-growth">$0.0M</strong></span>
+  </section>
+
+  <section class="pipeline-strip" id="pipeline-strip" style="display: none;">
+    <span><span style="color: var(--muted);">Pipeline</span> · <strong id="pp-total">$0.0M</strong> <span id="pp-count" class="hint">(0)</span></span>
+    <span><span style="color: var(--muted);">Próximos 3m</span> · <strong id="pp-3m">$0.0M</strong></span>
+    <span><span style="color: var(--muted);">Hasta Feb 2027</span> · <strong id="pp-feb">$0.0M</strong></span>
+    <span><span style="color: var(--muted);">Gap post-pipeline</span> · <strong id="pp-gap" style="color: var(--accent);">$0.0M</strong></span>
+  </section>
+
+  <section class="controls">
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+      <div class="filter-group">
+        <span class="filter-label">Período</span>
+        <button class="chip active" data-period="mtd">MTD</button>
+        <button class="chip" data-period="l30d">L30D</button>
+        <button class="chip" data-period="l90d">L90D</button>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Ordenar</span>
+        <button class="chip active" data-sort="mrr">MRR</button>
+        <button class="chip" data-sort="multiple">Multiple</button>
+        <button class="chip" data-sort="projected">Pipeline</button>
+        <button class="chip" data-sort="invested">Invested</button>
+        <button class="chip" data-sort="name">A–Z</button>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Baseline</span>
+        <button class="chip" id="bulk-baseline-all">Firmar todas</button>
+        <button class="chip" id="bulk-baseline-none">Excluir todas</button>
+      </div>
+      <div class="filter-group">
+        <button class="chip primary" id="btn-add-brand">+ Brand</button>
+        <button class="chip danger" id="clear-projections">Borrar planes</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid-wrapper">
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section class="footer-summary">
+    <div class="summary-stat">
+      <div class="label">MRR Total</div>
+      <div class="value" id="foot-mrr">$0.0M</div>
+      <div class="breakdown" id="foot-mrr-bd">0 brands</div>
+    </div>
+    <div class="summary-stat">
+      <div class="label">Baseline</div>
+      <div class="value baseline-color" id="foot-baseline">$0.0M</div>
+      <div class="breakdown" id="foot-baseline-bd">0 firmadas</div>
+    </div>
+    <div class="summary-stat">
+      <div class="label">Growth Actual</div>
+      <div class="value growth-color" id="foot-growth">$0.0M</div>
+      <div class="breakdown" id="foot-growth-bd">B&amp;M + DK</div>
+    </div>
+    <div class="summary-stat">
+      <div class="label">Pipeline</div>
+      <div class="value projected-color" id="foot-projected">$0.0M</div>
+      <div class="breakdown" id="foot-projected-bd">0 ubicaciones</div>
+    </div>
+    <div class="summary-stat">
+      <div class="label">Total Invested</div>
+      <div class="value investment-color" id="foot-invested">$0</div>
+      <div class="breakdown" id="foot-invested-bd">Year-1 USD</div>
+    </div>
+    <div class="summary-stat">
+      <div class="label">Blended Multiple</div>
+      <div class="value" id="foot-multiple">—</div>
+      <div class="breakdown" id="foot-multiple-bd">MRR / Investment</div>
+    </div>
+  </section>
+
+  <div class="footnote">
+    <span>Rappi Originals · SP&amp;A México · Confidential</span>
+    <span>Investment USD · MRR en moneda seleccionada · <span class="storage-indicator">localStorage + Sheets backup</span></span>
+  </div>
+
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<!-- Universal modal -->
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal" id="modal-content">
+    <div class="modal-header"><span id="modal-header-text">Planear</span> <em id="modal-slot-label">ubicación</em></div>
+    <div class="modal-sub" id="modal-context">—</div>
+    <div id="modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn danger" id="btn-delete" style="display: none;">Eliminar</button>
+      <div style="display: flex; gap: 12px; margin-left: auto;">
+        <button class="btn" id="btn-cancel">Cancelar</button>
+        <button class="btn primary" id="btn-save">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==================================================================
+   RAPPI ORIGINALS — CAPITAL EFFICIENCY GRID v6
+   Full CRUD: brands, DKs, B&M slots · Sheets sync · localStorage-first
+   ================================================================== */
+
+const GOAL_MRR_MXN = 20_000_000;
+const TARGET_DATE = new Date('2027-02-28');
+const CURRENT_DATE = new Date('2026-04-16');
+const MIN_BM_SLOTS = 10;
+const STORAGE_KEY = 'rappi-originals-state-v6';
+
+const DK_HUBS_SEED = [
+  { id: 'dk-polanco',    name: 'Polanco',     city: 'CDMX' },
+  { id: 'dk-roma',       name: 'Roma Norte',  city: 'CDMX' },
+  { id: 'dk-condesa',    name: 'Condesa',     city: 'CDMX' },
+  { id: 'dk-santa-fe',   name: 'Santa Fe',    city: 'CDMX' },
+  { id: 'dk-interlomas', name: 'Interlomas',  city: 'CDMX' },
+  { id: 'dk-del-valle',  name: 'Del Valle',   city: 'CDMX' },
+  { id: 'dk-narvarte',   name: 'Narvarte',    city: 'CDMX' },
+  { id: 'dk-gdl-prov',   name: 'Providencia', city: 'GDL'  },
+  { id: 'dk-mty-valle',  name: 'Valle',       city: 'MTY'  },
+];
+
+const BRAND_SEED = [
+  { id: 'rosetta', name: 'Rosetta', operator: 'Rosetta Grupo', investmentUsd: 180_000,
+    baseline: 420_000, baselineSigned: true, maxSlots: MIN_BM_SLOTS,
+    bmStores: [
+      { slot: 1, loc: 'Roma Norte', gmv: 310_000 },
+      { slot: 2, loc: 'Polanco',    gmv: 275_000 },
+      { slot: 3, loc: 'Condesa',    gmv: 240_000 },
+    ],
+    dkStores: [
+      { hubId: 'dk-polanco', gmv: 145_000 },
+      { hubId: 'dk-roma',    gmv: 128_000 },
+    ]
+  },
+  { id: 'parnita', name: 'El Parnita', operator: 'Parnita Grupo', investmentUsd: 95_000,
+    baseline: 180_000, baselineSigned: true, maxSlots: MIN_BM_SLOTS,
+    bmStores: [
+      { slot: 1, loc: 'Álamos',   gmv: 235_000 },
+      { slot: 2, loc: 'Narvarte', gmv: 210_000 },
+    ],
+    dkStores: [{ hubId: 'dk-condesa', gmv: 175_000 }]
+  },
+  { id: 'bobo', name: 'BOBO Burgers', operator: 'BOBO SPV', investmentUsd: 450_000,
+    baseline: 150_000, baselineSigned: false, maxSlots: MIN_BM_SLOTS,
+    bmStores: [
+      { slot: 1, loc: 'Roma',    gmv: 195_000 },
+      { slot: 2, loc: 'Polanco', gmv: 210_000 },
+    ],
+    dkStores: [
+      { hubId: 'dk-polanco',    gmv: 140_000 },
+      { hubId: 'dk-santa-fe',   gmv: 155_000 },
+      { hubId: 'dk-interlomas', gmv: 125_000 },
+    ]
+  },
+  { id: 'amg', name: 'AMG Hospitality', operator: 'AMG Group', investmentUsd: 220_000,
+    baseline: 380_000, baselineSigned: true, maxSlots: MIN_BM_SLOTS,
+    bmStores: [
+      { slot: 1, loc: 'Polanco',   gmv: 260_000 },
+      { slot: 2, loc: 'Santa Fe',  gmv: 195_000 },
+      { slot: 3, loc: 'Roma',      gmv: 240_000 },
+      { slot: 4, loc: 'Del Valle', gmv: 215_000 },
+    ],
+    dkStores: [
+      { hubId: 'dk-polanco',   gmv: 130_000 },
+      { hubId: 'dk-del-valle', gmv: 145_000 },
+    ]
+  },
+  { id: 'foodology', name: 'Foodology', operator: 'Foodology MX', investmentUsd: 380_000,
+    baseline: 320_000, baselineSigned: true, maxSlots: MIN_BM_SLOTS,
+    bmStores: [],
+    dkStores: [
+      { hubId: 'dk-polanco',    gmv: 175_000 },
+      { hubId: 'dk-roma',       gmv: 165_000 },
+      { hubId: 'dk-santa-fe',   gmv: 185_000 },
+      { hubId: 'dk-interlomas', gmv: 155_000 },
+      { hubId: 'dk-gdl-prov',   gmv: 140_000 },
+      { hubId: 'dk-mty-valle',  gmv: 125_000 },
+    ]
+  },
+  { id: 'muncher', name: 'Muncher', operator: 'Muncher MX', investmentUsd: 150_000,
+    baseline: 75_000, baselineSigned: false, maxSlots: MIN_BM_SLOTS,
+    bmStores: [],
+    dkStores: [
+      { hubId: 'dk-polanco',   gmv: 95_000 },
+      { hubId: 'dk-roma',      gmv: 88_000 },
+      { hubId: 'dk-condesa',   gmv: 105_000 },
+      { hubId: 'dk-narvarte',  gmv: 82_000 },
+      { hubId: 'dk-gdl-prov',  gmv: 78_000 },
+    ]
+  },
+];
+
+/* ------------ DATA STRUCTURE ------------
+   state.data = {
+     hubs: [{ id, name, city }],
+     brands: [{
+       id, name, operator, investmentUsd, baseline, baselineSigned, maxSlots,
+       stores: [{ id, type, slot?, hub_id?, gmv_mxn, take_rate_pct, hub_name, city, name }],
+       projections: [{ id, column, name, gmv_mxn, take_rate_pct, open_date }]
+     }]
+   }
+-------------------------------------------*/
+
+function seedData() {
+  const brands = BRAND_SEED.map(cfg => {
+    const stores = [];
+    if (cfg.baseline > 0) {
+      stores.push({
+        id: `${cfg.id}-baseline`, name: `${cfg.name} Baseline`, type: 'baseline',
+        slot: null, hub_id: null, hub_name: 'Baseline', city: '—',
+        gmv_mxn: cfg.baseline, take_rate_pct: 17
+      });
+    }
+    cfg.bmStores.forEach(bm => {
+      stores.push({
+        id: `${cfg.id}-bm-${bm.slot}`, name: `${cfg.name} ${bm.loc}`, type: 'bm',
+        slot: bm.slot, hub_id: null, hub_name: bm.loc, city: 'CDMX',
+        gmv_mxn: bm.gmv, take_rate_pct: 16
+      });
+    });
+    cfg.dkStores.forEach(dk => {
+      const hub = DK_HUBS_SEED.find(h => h.id === dk.hubId);
+      stores.push({
+        id: `${cfg.id}-${dk.hubId}`, name: `${cfg.name} · DK ${hub.name}`, type: 'dk',
+        slot: null, hub_id: dk.hubId, hub_name: hub.name, city: hub.city,
+        gmv_mxn: dk.gmv, take_rate_pct: 23
+      });
+    });
+    return {
+      id: cfg.id, name: cfg.name, operator: cfg.operator,
+      investmentUsd: cfg.investmentUsd, baseline: cfg.baseline,
+      baselineSigned: cfg.baselineSigned, maxSlots: cfg.maxSlots,
+      stores, projections: []
+    };
+  });
+  return { hubs: [...DK_HUBS_SEED], brands };
+}
+
+// ---------- PERSISTENCE ----------
+function saveAll() {
+  try {
+    const payload = {
+      data: state.data,
+      settings: { fx: state.fx, currency: state.currency, sheetsUrl: state.sheetsUrl, viewMode: state.viewMode }
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  } catch(e) { console.error('Save failed', e); }
+}
+function loadAll() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY); if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
+}
+
+// ---------- GOOGLE SHEETS SYNC ----------
+async function syncToSheets() {
+  if (!state.sheetsUrl) { toast('Configura la URL del Apps Script primero', 'err'); return; }
+  const btn = document.getElementById('btn-sync');
+  const status = document.getElementById('sync-status');
+  btn.classList.add('loading');
+  status.textContent = 'Syncing...';
+  status.className = 'sync-status';
+  try {
+    // Apps Script Web Apps from cross-origin browsers must use either:
+    // (a) FormData POST with no custom headers (no preflight), or
+    // (b) text/plain body. We use (a) for max compat.
+    const fd = new FormData();
+    fd.append('action', 'save');
+    fd.append('payload', JSON.stringify(state.data));
+    const res = await fetch(state.sheetsUrl, { method: 'POST', body: fd, redirect: 'follow' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const txt = await res.text();
+    let result; try { result = JSON.parse(txt); } catch { result = { ok: res.ok }; }
+    if (result.ok || result.status === 'ok') {
+      status.textContent = `Synced ${new Date().toLocaleTimeString('es-MX')}`;
+      status.className = 'sync-status ok';
+      toast('Guardado en Google Sheets', 'ok');
+    } else {
+      throw new Error(result.error || 'unknown');
+    }
+  } catch(e) {
+    status.textContent = `Error: ${e.message.slice(0,30)}`;
+    status.className = 'sync-status err';
+    toast(`Sync falló: ${e.message}`, 'err');
+  } finally {
+    btn.classList.remove('loading');
+  }
+}
+async function loadFromSheets() {
+  if (!state.sheetsUrl) { toast('Configura la URL del Apps Script primero', 'err'); return; }
+  if (!confirm('Esto sobrescribirá tus datos locales con lo que esté en Sheets. ¿Continuar?')) return;
+  const status = document.getElementById('sync-status');
+  status.textContent = 'Loading...';
+  try {
+    const url = state.sheetsUrl + (state.sheetsUrl.includes('?') ? '&' : '?') + 'action=load';
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const result = await res.json();
+    if (result.data && result.data.brands && result.data.hubs) {
+      state.data = result.data;
+      saveAll();
+      render();
+      status.textContent = `Loaded ${new Date().toLocaleTimeString('es-MX')}`;
+      status.className = 'sync-status ok';
+      toast('Datos cargados desde Sheets', 'ok');
+    } else {
+      throw new Error('Estructura inválida en Sheets');
+    }
+  } catch(e) {
+    status.textContent = `Error: ${e.message.slice(0,30)}`;
+    status.className = 'sync-status err';
+    toast(`Load falló: ${e.message}`, 'err');
+  }
+}
+
+function toast(msg, type = 'ok') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + (type === 'err' ? 'err' : type === 'warn' ? 'warn' : '');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ---------- HELPERS ----------
+const fmtSmart = v => {
+  const abs = Math.abs(v);
+  if (abs >= 1_000_000) return `$${(v/1_000_000).toFixed(2)}M`;
+  if (abs >= 1_000)     return `$${(v/1000).toFixed(0)}K`;
+  return `$${Math.round(v)}`;
+};
+const fmtUsd = v => fmtSmart(v);
+const fmtCcyNoSuffix = mxn => fmtSmart(state.currency === 'usd' ? mxn / state.fx : mxn);
+const fmtPct = v => `${v.toFixed(1)}%`;
+const slugify = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || `item-${Date.now()}`;
+function tierForGmv(gmv, allGmvs) {
+  if (allGmvs.length === 0) return 'mid';
+  const sorted = [...allGmvs].sort((a,b) => a-b);
+  const p33 = sorted[Math.floor(sorted.length * 0.33)];
+  const p67 = sorted[Math.floor(sorted.length * 0.67)];
+  if (gmv < p33) return 'low';
+  if (gmv < p67) return 'mid';
+  return 'high';
+}
+function monthsBetween(d1, d2) {
+  return (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
+}
+function computeMultiple(mrrMxn, investmentUsd) {
+  if (!investmentUsd || investmentUsd <= 0) return null;
+  return (mrrMxn / state.fx) / investmentUsd;
+}
+function tierForMultiple(m) {
+  if (m === null || m === undefined) return 'null';
+  if (m >= 0.08) return 'high';
+  if (m >= 0.04) return 'mid';
+  return 'low';
+}
+function computePaybackMonths(mrrMxn, investmentUsd, blendedTakePct) {
+  if (!investmentUsd || investmentUsd <= 0 || !mrrMxn) return null;
+  const rev = (mrrMxn / state.fx) * (blendedTakePct / 100);
+  if (rev <= 0) return null;
+  return investmentUsd / rev;
+}
+
+// ---------- STATE ----------
+let state = {
+  data: null,
+  period: 'mtd', blockSize: 'gmv', sortBy: 'mrr', viewMode: 'actual',
+  currency: 'usd', fx: 20.0, sheetsUrl: '',
+  modalCtx: null
+};
+
+// ---------- RENDER ----------
+function render() {
+  const { brands, hubs } = state.data;
+  const includeProjected = state.viewMode === 'planned';
+
+  // Compute which hubs are visible (have stores or projections)
+  const usedHubIds = new Set();
+  brands.forEach(b => {
+    b.stores.forEach(s => { if (s.hub_id) usedHubIds.add(s.hub_id); });
+    (b.projections || []).forEach(p => {
+      if (p.column && p.column.startsWith('dk-')) usedHubIds.add(p.column.slice(3));
+    });
+  });
+  const visibleHubs = hubs.filter(h => usedHubIds.has(h.id));
+
+  // Max slots across all brands (global minimum 10)
+  const maxSlotsGlobal = Math.max(MIN_BM_SLOTS, ...brands.map(b => b.maxSlots || MIN_BM_SLOTS));
+
+  // Compute per-brand metrics
+  const brandTotals = brands.map(b => {
+    const baseline = b.stores.filter(s => s.type === 'baseline').reduce((s,x) => s + x.gmv_mxn, 0);
+    const bm = b.stores.filter(s => s.type === 'bm').reduce((s,x) => s + x.gmv_mxn, 0);
+    const dk = b.stores.filter(s => s.type === 'dk').reduce((s,x) => s + x.gmv_mxn, 0);
+    const projTotal = (b.projections || []).reduce((s,p) => s + (p.gmv_mxn || 0), 0);
+    const growth = bm + dk;
+    const countedBase = b.baselineSigned ? baseline : 0;
+    const mrrActual = countedBase + growth;
+    const mrrWithProj = mrrActual + projTotal;
+
+    const actualRev = b.stores.reduce((s,x) => {
+      if (x.type === 'baseline' && !b.baselineSigned) return s;
+      return s + x.gmv_mxn * x.take_rate_pct/100;
+    }, 0);
+    const projRev = (b.projections || []).reduce((s,p) => s + p.gmv_mxn * (p.take_rate_pct || 18)/100, 0);
+    const totalRev = actualRev + (includeProjected ? projRev : 0);
+    const denom = includeProjected ? mrrWithProj : mrrActual;
+    const blendedTake = denom > 0 ? (totalRev / denom) * 100 : 0;
+
+    return { ...b, baseline, bm, dk, growth, countedBase, mrrActual, mrrWithProj, projTotal, take: totalRev, blendedTake };
+  });
+
+  // Sort
+  brandTotals.sort((a,b) => {
+    if (state.sortBy === 'multiple') {
+      const ma = computeMultiple(includeProjected ? a.mrrWithProj : a.mrrActual, a.investmentUsd) || -1;
+      const mb = computeMultiple(includeProjected ? b.mrrWithProj : b.mrrActual, b.investmentUsd) || -1;
+      return mb - ma;
+    }
+    if (state.sortBy === 'invested')  return (b.investmentUsd || 0) - (a.investmentUsd || 0);
+    if (state.sortBy === 'projected') return b.projTotal - a.projTotal;
+    if (state.sortBy === 'name')      return a.name.localeCompare(b.name);
+    return (includeProjected ? b.mrrWithProj : b.mrrActual) - (includeProjected ? a.mrrWithProj : a.mrrActual);
+  });
+
+  // Totals
+  const baselineAll = brandTotals.reduce((s,b) => s + b.baseline, 0);
+  const baselineSigned = brandTotals.reduce((s,b) => s + b.countedBase, 0);
+  const baselineExcluded = baselineAll - baselineSigned;
+  const signedCount = brandTotals.filter(b => b.baselineSigned && b.baseline > 0).length;
+  const excludedCount = brandTotals.filter(b => !b.baselineSigned && b.baseline > 0).length;
+
+  // Per BM slot totals
+  const bmSlotTotals = [];
+  for (let slot = 1; slot <= maxSlotsGlobal; slot++) {
+    const actualStores = brands.flatMap(b => b.stores.filter(s => s.type === 'bm' && s.slot === slot));
+    const projStores   = brands.flatMap(b => (b.projections || []).filter(p => p.column === `bm-${slot}`));
+    bmSlotTotals.push({
+      slot,
+      totalActual: actualStores.reduce((s,x) => s + x.gmv_mxn, 0),
+      totalProjected: projStores.reduce((s,x) => s + x.gmv_mxn, 0),
+      countActual: actualStores.length,
+      countProjected: projStores.length
+    });
+  }
+  const bmTotalAll = bmSlotTotals.reduce((s,x) => s + x.totalActual, 0);
+
+  // Per hub totals
+  const hubTotals = visibleHubs.map(h => {
+    const actualStores = brands.flatMap(b => b.stores.filter(s => s.hub_id === h.id));
+    const projStores = brands.flatMap(b => (b.projections || []).filter(p => p.column === `dk-${h.id}`));
+    return {
+      hub: h,
+      totalActual: actualStores.reduce((s,x) => s + x.gmv_mxn, 0),
+      totalProjected: projStores.reduce((s,x) => s + x.gmv_mxn, 0),
+      countActual: actualStores.length,
+      countProjected: projStores.length
+    };
+  });
+  const dkTotalAll = hubTotals.reduce((s,h) => s + h.totalActual, 0);
+
+  const growthAll = bmTotalAll + dkTotalAll;
+  const projectedAll = brandTotals.reduce((s,b) => s + b.projTotal, 0);
+  const projectedCount = brandTotals.reduce((s,b) => s + (b.projections || []).length, 0);
+  const totalInvestedUsd = brandTotals.reduce((s,b) => s + (b.investmentUsd || 0), 0);
+
+  // Time-windowed projections
+  const threeOut = new Date(CURRENT_DATE); threeOut.setMonth(threeOut.getMonth() + 3);
+  let proj3M = 0, projFeb = 0;
+  brands.forEach(b => (b.projections || []).forEach(p => {
+    if (!p.open_date) return;
+    const d = new Date(p.open_date);
+    if (d <= threeOut)     proj3M += p.gmv_mxn;
+    if (d <= TARGET_DATE)  projFeb += p.gmv_mxn;
+  }));
+
+  const portfolioActual = baselineSigned + growthAll;
+  const portfolioWithProj = portfolioActual + projectedAll;
+  const displayedMrr = includeProjected ? portfolioWithProj : portfolioActual;
+  const portfolioTake = brandTotals.reduce((s,b) => s + b.take, 0);
+  const blendedTakePct = displayedMrr > 0 ? (portfolioTake / displayedMrr) * 100 : 0;
+  const totalStoresReal = brands.reduce((s,b) => s + b.stores.filter(x => x.type !== 'baseline').length, 0);
+
+  const portfolioMultiple = totalInvestedUsd > 0 ? (displayedMrr / state.fx) / totalInvestedUsd : null;
+  const portfolioPayback = computePaybackMonths(displayedMrr, totalInvestedUsd, blendedTakePct);
+
+  const gap = GOAL_MRR_MXN - displayedMrr;
+  const monthsLeft = monthsBetween(CURRENT_DATE, TARGET_DATE);
+  const requiredMom = (displayedMrr > 0 && monthsLeft > 0)
+    ? (Math.pow(GOAL_MRR_MXN/displayedMrr, 1/monthsLeft) - 1) * 100 : 0;
+  const pctGoal = (displayedMrr / GOAL_MRR_MXN) * 100;
+
+  // KPIs
+  const goalBanner = document.getElementById('goal-banner');
+  const kpiCurrent = document.getElementById('kpi-current');
+  const kpiCurrentLabel = document.getElementById('kpi-current-label');
+  if (includeProjected) {
+    goalBanner.classList.add('planned-mode');
+    kpiCurrent.classList.remove('primary'); kpiCurrent.classList.add('projected-color');
+    kpiCurrentLabel.textContent = 'MRR Forward (Feb 2027)';
+  } else {
+    goalBanner.classList.remove('planned-mode');
+    kpiCurrent.classList.add('primary'); kpiCurrent.classList.remove('projected-color');
+    kpiCurrentLabel.textContent = 'MRR Actual';
+  }
+
+  document.getElementById('kpi-goal').textContent = fmtCcyNoSuffix(GOAL_MRR_MXN);
+  kpiCurrent.textContent = fmtCcyNoSuffix(displayedMrr);
+  document.getElementById('kpi-current-sub').textContent = `${pctGoal.toFixed(1)}% de meta · ${state.currency.toUpperCase()}`;
+  document.getElementById('kpi-gap').textContent = fmtCcyNoSuffix(Math.max(gap, 0));
+  document.getElementById('kpi-gap-label').textContent = includeProjected ? 'Gap post-pipeline' : 'Gap a Meta';
+  const gapSub = document.getElementById('kpi-gap-sub');
+  gapSub.textContent = `+${requiredMom.toFixed(1)}% MoM requerido`;
+  gapSub.className = 'sub ' + (requiredMom > 10 ? 'neg' : requiredMom > 5 ? '' : 'pos');
+  document.getElementById('kpi-invested').textContent = fmtUsd(totalInvestedUsd);
+  document.getElementById('kpi-invested-sub').textContent = `Year-1 · ${brandTotals.filter(b => b.investmentUsd > 0).length} brands`;
+  document.getElementById('kpi-efficiency').textContent = portfolioMultiple !== null ? `${portfolioMultiple.toFixed(3)}×` : '—';
+  document.getElementById('kpi-efficiency-sub').textContent = portfolioMultiple !== null
+    ? `${includeProjected ? 'Forward' : 'Actual'} · Payback ${portfolioPayback ? portfolioPayback.toFixed(0) + 'm' : '—'}`
+    : 'Set investments';
+
+  const baselinePct = Math.min((baselineSigned/GOAL_MRR_MXN)*100, 100);
+  const growthPct = Math.min((growthAll/GOAL_MRR_MXN)*100, 100 - baselinePct);
+  const projectedPct = includeProjected ? Math.min((projectedAll/GOAL_MRR_MXN)*100, 100 - baselinePct - growthPct) : 0;
+  document.getElementById('progress-baseline').style.width = `${baselinePct}%`;
+  document.getElementById('progress-growth').style.width = `${growthPct}%`;
+  document.getElementById('progress-projected').style.width = `${projectedPct}%`;
+
+  document.getElementById('bs-total').textContent = fmtCcyNoSuffix(baselineAll);
+  document.getElementById('bs-signed').textContent = fmtCcyNoSuffix(baselineSigned);
+  document.getElementById('bs-signed-count').textContent = `(${signedCount})`;
+  document.getElementById('bs-excluded').textContent = fmtCcyNoSuffix(baselineExcluded);
+  document.getElementById('bs-excluded-count').textContent = `(${excludedCount})`;
+  document.getElementById('bs-growth').textContent = fmtCcyNoSuffix(growthAll);
+
+  const pipelineStrip = document.getElementById('pipeline-strip');
+  if (projectedCount > 0) {
+    pipelineStrip.style.display = 'flex';
+    document.getElementById('pp-total').textContent = fmtCcyNoSuffix(projectedAll);
+    document.getElementById('pp-count').textContent = `(${projectedCount})`;
+    document.getElementById('pp-3m').textContent = fmtCcyNoSuffix(proj3M);
+    document.getElementById('pp-feb').textContent = fmtCcyNoSuffix(projFeb);
+    const postGap = GOAL_MRR_MXN - (portfolioActual + projFeb);
+    document.getElementById('pp-gap').textContent = fmtCcyNoSuffix(Math.max(postGap, 0));
+  } else {
+    pipelineStrip.style.display = 'none';
+  }
+
+  // Footer
+  document.getElementById('foot-mrr').textContent = fmtCcyNoSuffix(displayedMrr);
+  document.getElementById('foot-mrr-bd').textContent = `${brands.length} brands · ${totalStoresReal} stores`;
+  document.getElementById('foot-baseline').textContent = fmtCcyNoSuffix(baselineSigned);
+  document.getElementById('foot-baseline-bd').textContent = `${signedCount} firmadas`;
+  document.getElementById('foot-growth').textContent = fmtCcyNoSuffix(growthAll);
+  document.getElementById('foot-growth-bd').textContent = `B&M ${fmtCcyNoSuffix(bmTotalAll)} · DK ${fmtCcyNoSuffix(dkTotalAll)}`;
+  document.getElementById('foot-projected').textContent = fmtCcyNoSuffix(projectedAll);
+  document.getElementById('foot-projected-bd').textContent = `${projectedCount} ubicaciones`;
+  document.getElementById('foot-invested').textContent = fmtUsd(totalInvestedUsd);
+  document.getElementById('foot-invested-bd').textContent = `Year-1 USD`;
+  document.getElementById('foot-multiple').textContent = portfolioMultiple !== null ? `${portfolioMultiple.toFixed(3)}×` : '—';
+  document.getElementById('foot-multiple-bd').textContent = portfolioPayback ? `Payback ${portfolioPayback.toFixed(0)}m @ ${blendedTakePct.toFixed(0)}% take` : 'Set investments';
+
+  // ==== BUILD GRID ====
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  const colWidths = [
+    '200px',        // brand
+    '130px',        // investment
+    '130px',        // baseline
+    ...Array(maxSlotsGlobal).fill('100px'),
+    ...visibleHubs.map(() => '110px'),
+    '70px',         // add DK
+    '130px'         // metric
+  ];
+  grid.style.gridTemplateColumns = colWidths.join(' ');
+
+  const allGmvs = [
+    ...brands.flatMap(b => b.stores.map(s => s.gmv_mxn)),
+    ...brands.flatMap(b => (b.projections || []).map(p => p.gmv_mxn))
+  ];
+  const maxGmv = Math.max(...allGmvs, 1);
+
+  // Header row
+  const corner = document.createElement('div');
+  corner.className = 'corner-cell';
+  corner.innerHTML = `Brand <span style="color: var(--accent); margin: 0 6px;">×</span> Ubicación`;
+  grid.appendChild(corner);
+
+  const invHead = document.createElement('div');
+  invHead.className = 'col-header type-investment';
+  invHead.innerHTML = `
+    <span class="col-title">◉ INVESTMENT</span>
+    <span class="col-sub">Year-1 USD</span>
+    <span class="col-total">${fmtUsd(totalInvestedUsd)}</span>
+  `;
+  grid.appendChild(invHead);
+
+  const baseHead = document.createElement('div');
+  baseHead.className = 'col-header type-baseline';
+  baseHead.innerHTML = `
+    <span class="col-title">● BASELINE</span>
+    <span class="col-sub">MRR firmado</span>
+    <span class="col-total">${fmtCcyNoSuffix(baselineSigned)} <span style="opacity:0.65; font-size:10px;">/ ${fmtCcyNoSuffix(baselineAll)}</span></span>
+  `;
+  grid.appendChild(baseHead);
+
+  for (let slot = 1; slot <= maxSlotsGlobal; slot++) {
+    const slotData = bmSlotTotals[slot-1];
+    const head = document.createElement('div');
+    head.className = 'col-header type-bm' + (slot === 1 ? ' type-bm-group-start' : '');
+    head.innerHTML = `
+      <span class="col-title">■ B&amp;M ${String(slot).padStart(2,'0')}</span>
+      <span class="col-sub">${slotData.countActual > 0 ? `${slotData.countActual} tdas.` : 'slot'}</span>
+      <span class="col-total">${slotData.totalActual > 0 ? fmtCcyNoSuffix(slotData.totalActual) : '—'}</span>
+      ${slotData.totalProjected > 0 ? `<span class="projected-mini">+${fmtCcyNoSuffix(slotData.totalProjected)}</span>` : ''}
+    `;
+    grid.appendChild(head);
+  }
+
+  visibleHubs.forEach((hub, idx) => {
+    const hubData = hubTotals[idx];
+    const head = document.createElement('div');
+    head.className = 'col-header type-dk' + (idx === 0 ? ' type-dk-group-start' : '');
+    head.innerHTML = `
+      <span class="col-title">◆ DK ${String(idx+1).padStart(2,'0')}</span>
+      <span class="col-sub">${hub.name} · ${hub.city}</span>
+      <span class="col-total">${fmtCcyNoSuffix(hubData.totalActual)}</span>
+      ${hubData.totalProjected > 0 ? `<span class="projected-mini">+${fmtCcyNoSuffix(hubData.totalProjected)}</span>` : ''}
+      <span class="col-edit-hint">✎</span>
+    `;
+    head.onclick = () => openDkEditModal(hub);
+    grid.appendChild(head);
+  });
+
+  // Add DK column
+  const addDk = document.createElement('div');
+  addDk.className = 'add-dk-col col-header';
+  addDk.innerHTML = `+ DK`;
+  addDk.onclick = () => openDkEditModal(null);
+  grid.appendChild(addDk);
+
+  const mHead = document.createElement('div');
+  mHead.className = 'col-header type-metric';
+  mHead.innerHTML = `
+    <span class="col-title">Σ MRR · Multiple</span>
+    <span class="col-sub">MRR / Investment</span>
+  `;
+  grid.appendChild(mHead);
+
+  // ==== BRAND ROWS ====
+  brandTotals.forEach(brand => {
+    const rh = document.createElement('div');
+    rh.className = 'row-header';
+    rh.style.position = 'relative';
+    const hasBaseline = brand.baseline > 0;
+    const displayMrr = includeProjected ? brand.mrrWithProj : brand.mrrActual;
+    rh.innerHTML = `
+      <div class="brand-name">${brand.name}</div>
+      <div class="brand-op">${brand.operator}</div>
+      <div class="brand-mrr">
+        <span>${fmtCcyNoSuffix(displayMrr)}</span>
+        <span class="pct">${((displayMrr/GOAL_MRR_MXN)*100).toFixed(1)}%</span>
+      </div>
+      ${brand.projTotal > 0 ? `<div class="brand-proj">+ ${fmtCcyNoSuffix(brand.projTotal)} planeado</div>` : ''}
+      ${hasBaseline ? `
+        <div class="toggle-baseline ${brand.baselineSigned ? 'active' : ''}" data-brand-id="${brand.id}">
+          <span class="dot"></span>
+          <span>Baseline ${brand.baselineSigned ? 'firmada' : 'excluida'}</span>
+        </div>` : `
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 8.5px; color: var(--muted); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.08em;">
+          sin baseline · brand nuevo
+        </div>`}
+      <span class="edit-hint">✎</span>
+    `;
+    rh.onclick = (e) => {
+      // Don't edit brand if clicked the baseline toggle
+      if (e.target.closest('.toggle-baseline')) return;
+      openBrandEditModal(brand);
+    };
+    grid.appendChild(rh);
+
+    // Investment cell
+    const invCell = document.createElement('div');
+    invCell.className = 'cell investment-cell';
+    const invInput = document.createElement('input');
+    invInput.type = 'number'; invInput.min = '0'; invInput.step = '1000';
+    invInput.value = brand.investmentUsd || ''; invInput.placeholder = '0';
+    invInput.dataset.brandId = brand.id;
+    invInput.addEventListener('input', (e) => {
+      const v = parseFloat(e.target.value) || 0;
+      const b = state.data.brands.find(x => x.id === e.target.dataset.brandId);
+      if (b) { b.investmentUsd = v; saveAll(); clearTimeout(state.invDebounce); state.invDebounce = setTimeout(render, 400); }
+    });
+    invCell.appendChild(invInput);
+    const ccyLabel = document.createElement('div');
+    ccyLabel.className = 'currency-label';
+    ccyLabel.textContent = 'USD · year 1';
+    invCell.appendChild(ccyLabel);
+    grid.appendChild(invCell);
+
+    // Baseline cell
+    const baseCell = document.createElement('div');
+    const baselineStores = brand.stores.filter(s => s.type === 'baseline');
+    if (baselineStores.length === 0 || brand.baseline === 0) {
+      baseCell.className = 'cell baseline-cell empty';
+    } else {
+      baseCell.className = 'cell baseline-cell' + (brand.baselineSigned ? '' : ' excluded');
+      baseCell.innerHTML = `<span class="cell-total" ${!brand.baselineSigned ? 'style="opacity:0.5; text-decoration: line-through;"' : ''}>${fmtCcyNoSuffix(brand.baseline)}</span>`;
+      baselineStores.forEach(store => baseCell.appendChild(makeStoreBlock(store, allGmvs, maxGmv, brand.baselineSigned)));
+    }
+    grid.appendChild(baseCell);
+
+    const brandMaxSlots = brand.maxSlots || MIN_BM_SLOTS;
+
+    // B&M slots
+    for (let slot = 1; slot <= maxSlotsGlobal; slot++) {
+      const cell = document.createElement('div');
+      const colKey = `bm-${slot}`;
+      const storeInSlot = brand.stores.find(s => s.type === 'bm' && s.slot === slot);
+      const projections = includeProjected ? (brand.projections || []).filter(p => p.column === colKey) : [];
+      const cellClass = slot === 1 ? ' bm-start' : '';
+
+      // Check if this slot is beyond the brand's max — show "+ slot" button on the next available slot
+      if (slot > brandMaxSlots) {
+        if (slot === brandMaxSlots + 1) {
+          // Show "+ add slot" cell
+          cell.className = 'cell add-bm-slot' + cellClass;
+          cell.innerHTML = `+ slot`;
+          cell.onclick = () => {
+            const b = state.data.brands.find(x => x.id === brand.id);
+            b.maxSlots = (b.maxSlots || MIN_BM_SLOTS) + 1;
+            saveAll(); render();
+            toast(`Slot agregado a ${b.name}`, 'ok');
+          };
+        } else {
+          // Beyond current brand's slots — empty non-interactive
+          cell.className = 'cell empty' + cellClass;
+          cell.style.opacity = '0.3';
+        }
+        grid.appendChild(cell);
+        continue;
+      }
+
+      if (!storeInSlot && projections.length === 0) {
+        cell.className = 'cell slot-empty' + cellClass;
+        cell.onclick = () => openProjectionModal(brand.id, colKey, `B&M Slot ${String(slot).padStart(2,'0')}`, null);
+      } else {
+        const hasActual = !!storeInSlot;
+        const hasProj = projections.length > 0;
+        let cls = 'cell' + cellClass;
+        if (hasProj && !hasActual) cls += ' only-projected';
+        else if (hasProj) cls += ' has-projected';
+        cell.className = cls;
+        const actualGmv = hasActual ? storeInSlot.gmv_mxn : 0;
+        const projGmv = projections.reduce((s,p) => s + p.gmv_mxn, 0);
+        cell.innerHTML = `<span class="cell-total">${fmtCcyNoSuffix(actualGmv + projGmv)}${hasProj && hasActual ? ` <span style="color:var(--projected);font-size:8px;">+${fmtCcyNoSuffix(projGmv)}</span>` : ''}</span>`;
+        if (hasActual) cell.appendChild(makeStoreBlock(storeInSlot, allGmvs, maxGmv, true));
+        projections.forEach(p => cell.appendChild(makeProjectedBlock(p, brand.id, colKey, `B&M Slot ${String(slot).padStart(2,'0')}`, allGmvs, maxGmv)));
+      }
+      grid.appendChild(cell);
+    }
+
+    // DK cells
+    visibleHubs.forEach((hub, idx) => {
+      const cell = document.createElement('div');
+      const colKey = `dk-${hub.id}`;
+      const storesInHub = brand.stores.filter(s => s.hub_id === hub.id);
+      const projections = includeProjected ? (brand.projections || []).filter(p => p.column === colKey) : [];
+      const cellClass = idx === 0 ? ' dk-start' : '';
+
+      if (storesInHub.length === 0 && projections.length === 0) {
+        cell.className = 'cell slot-empty' + cellClass;
+        cell.onclick = () => openProjectionModal(brand.id, colKey, `DK ${hub.name}`, null);
+      } else {
+        const hasActual = storesInHub.length > 0;
+        const hasProj = projections.length > 0;
+        let cls = 'cell' + cellClass;
+        if (hasProj && !hasActual) cls += ' only-projected';
+        else if (hasProj) cls += ' has-projected';
+        cell.className = cls;
+        const actualGmv = storesInHub.reduce((s,x) => s + x.gmv_mxn, 0);
+        const projGmv = projections.reduce((s,p) => s + p.gmv_mxn, 0);
+        cell.innerHTML = `<span class="cell-total">${fmtCcyNoSuffix(actualGmv + projGmv)}${hasProj && hasActual ? ` <span style="color:var(--projected);font-size:8px;">+${fmtCcyNoSuffix(projGmv)}</span>` : ''}</span>`;
+        storesInHub.forEach(store => cell.appendChild(makeStoreBlock(store, allGmvs, maxGmv, true)));
+        projections.forEach(p => cell.appendChild(makeProjectedBlock(p, brand.id, colKey, `DK ${hub.name}`, allGmvs, maxGmv)));
+      }
+      grid.appendChild(cell);
+    });
+
+    // "Add DK" column — just a filler in each row (no interaction)
+    const filler = document.createElement('div');
+    filler.className = 'cell empty';
+    filler.style.borderLeft = 'none';
+    grid.appendChild(filler);
+
+    // Metric cell
+    const metricCell = document.createElement('div');
+    metricCell.className = 'cell metric-cell';
+    const multiple = computeMultiple(displayMrr, brand.investmentUsd);
+    const payback = computePaybackMonths(displayMrr, brand.investmentUsd, brand.blendedTake);
+    const multTier = tierForMultiple(multiple);
+    const payTier = payback === null ? 'null' : (payback <= 36 ? 'good' : payback <= 72 ? 'mid' : 'bad');
+    metricCell.innerHTML = `
+      <div class="metric-mrr">${fmtCcyNoSuffix(displayMrr)}<span class="pct">${((displayMrr/GOAL_MRR_MXN)*100).toFixed(1)}%</span></div>
+      <div class="metric-multiple ${multTier}">${multiple !== null ? `${multiple.toFixed(3)}×` : '—'}</div>
+      <div class="metric-label">MRR / Investment</div>
+      <div class="metric-payback ${payTier}">${payback !== null ? `Payback ${payback.toFixed(0)}m` : 'Set investment'}</div>
+    `;
+    grid.appendChild(metricCell);
+  });
+
+  // ==== ADD BRAND ROW ====
+  const addBrandCell = document.createElement('div');
+  addBrandCell.className = 'add-brand-row';
+  addBrandCell.innerHTML = '+ Agregar nuevo aliado';
+  addBrandCell.onclick = () => openBrandEditModal(null);
+  grid.appendChild(addBrandCell);
+  // Fill rest of add-brand row with placeholders
+  const totalColsAfterBrand = 1 + 1 + maxSlotsGlobal + visibleHubs.length + 1 + 1; // inv, base, slots, hubs, addDk, metric
+  for (let i = 0; i < totalColsAfterBrand; i++) {
+    const ph = document.createElement('div');
+    ph.className = 'add-brand-row-placeholder';
+    grid.appendChild(ph);
+  }
+
+  // ==== GRAND TOTAL ROW ====
+  const gt = document.createElement('div');
+  gt.className = 'row-total grand';
+  gt.innerHTML = `Σ <span class="sub">Portfolio</span>`;
+  grid.appendChild(gt);
+
+  const invGrand = document.createElement('div');
+  invGrand.className = 'row-total investment-col';
+  invGrand.innerHTML = `${fmtUsd(totalInvestedUsd)}<span class="sub">year-1 USD</span>`;
+  grid.appendChild(invGrand);
+
+  const bGrand = document.createElement('div');
+  bGrand.className = 'row-total baseline-col';
+  bGrand.innerHTML = `${fmtCcyNoSuffix(baselineSigned)}<span class="sub">${signedCount} firmadas</span>`;
+  grid.appendChild(bGrand);
+
+  bmSlotTotals.forEach((slotData, idx) => {
+    const cell = document.createElement('div');
+    cell.className = 'row-total';
+    cell.style.background = 'var(--paper-deep)';
+    if (idx === 0) cell.style.borderLeft = '3px solid var(--rule)';
+    const total = slotData.totalActual + (includeProjected ? slotData.totalProjected : 0);
+    cell.innerHTML = total > 0
+      ? `${fmtCcyNoSuffix(total)}<span class="sub">${slotData.countActual + (includeProjected ? slotData.countProjected : 0)} tdas.</span>`
+      : `<span style="color: var(--muted);">—</span><span class="sub">vacío</span>`;
+    grid.appendChild(cell);
+  });
+
+  hubTotals.forEach((ht, idx) => {
+    const cell = document.createElement('div');
+    cell.className = 'row-total';
+    cell.style.background = 'var(--paper-deep)';
+    if (idx === 0) cell.style.borderLeft = '3px solid var(--rule)';
+    const total = ht.totalActual + (includeProjected ? ht.totalProjected : 0);
+    cell.innerHTML = `${fmtCcyNoSuffix(total)}<span class="sub">${ht.countActual + (includeProjected ? ht.countProjected : 0)}</span>`;
+    grid.appendChild(cell);
+  });
+
+  // Add-DK column in totals row — empty
+  const addDkTotal = document.createElement('div');
+  addDkTotal.className = 'row-total';
+  addDkTotal.style.background = 'var(--paper-deep)';
+  addDkTotal.innerHTML = '';
+  grid.appendChild(addDkTotal);
+
+  const pgt = document.createElement('div');
+  pgt.className = 'row-total';
+  pgt.style.background = includeProjected ? 'var(--projected)' : 'var(--accent)';
+  pgt.style.color = 'var(--paper)';
+  pgt.style.borderLeft = '3px solid var(--rule)';
+  pgt.style.fontFamily = "'Fraunces', serif";
+  pgt.style.fontStyle = 'italic'; pgt.style.fontWeight = '700'; pgt.style.fontSize = '16px';
+  pgt.innerHTML = `${portfolioMultiple !== null ? `${portfolioMultiple.toFixed(3)}×` : fmtCcyNoSuffix(displayedMrr)}<span class="sub" style="color: rgba(245,241,234,0.9); font-family: 'JetBrains Mono', monospace; font-style: normal;">${portfolioMultiple !== null ? fmtCcyNoSuffix(displayedMrr) : pctGoal.toFixed(1) + '% meta'}</span>`;
+  grid.appendChild(pgt);
+
+  // Wire baseline toggles (stopPropagation so it doesn't trigger brand edit)
+  document.querySelectorAll('.toggle-baseline').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const brandId = el.dataset.brandId;
+      const brand = state.data.brands.find(b => b.id === brandId);
+      if (brand) { brand.baselineSigned = !brand.baselineSigned; saveAll(); render(); }
+    });
+  });
+
+  document.getElementById('updated-ts').textContent = new Date().toLocaleString('es-MX', {
+    month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit'
+  });
+}
+
+function makeStoreBlock(store, allGmvs, maxGmv, included) {
+  const block = document.createElement('div');
+  const tier = tierForGmv(store.gmv_mxn, allGmvs);
+  let classes = `store-block ${store.type} tier-${tier}`;
+  if (store.type === 'baseline' && !included) classes += ' excluded';
+  block.className = classes;
+  if (state.blockSize === 'gmv') {
+    const ratio = store.gmv_mxn / maxGmv;
+    const side = Math.max(14, Math.sqrt(ratio) * 44);
+    block.style.width = `${side}px`; block.style.height = `${side}px`;
+  } else {
+    block.style.width = '22px'; block.style.height = '22px';
+  }
+  block.addEventListener('mouseenter', (e) => showTooltip(e, store, included));
+  block.addEventListener('mousemove', moveTooltip);
+  block.addEventListener('mouseleave', hideTooltip);
+  return block;
+}
+function makeProjectedBlock(proj, brandId, colKey, colLabel, allGmvs, maxGmv) {
+  const block = document.createElement('div');
+  const tier = tierForGmv(proj.gmv_mxn, allGmvs);
+  block.className = `store-block projected tier-${tier}`;
+  if (state.blockSize === 'gmv') {
+    const ratio = proj.gmv_mxn / maxGmv;
+    const side = Math.max(14, Math.sqrt(ratio) * 44);
+    block.style.width = `${side}px`; block.style.height = `${side}px`;
+  } else {
+    block.style.width = '22px'; block.style.height = '22px';
+  }
+  block.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openProjectionModal(brandId, colKey, colLabel, proj);
+  });
+  block.addEventListener('mouseenter', (e) => showProjectedTooltip(e, proj, colLabel));
+  block.addEventListener('mousemove', moveTooltip);
+  block.addEventListener('mouseleave', hideTooltip);
+  return block;
+}
+
+// ---------- TOOLTIP ----------
+const tooltip = document.getElementById('tooltip');
+function showTooltip(e, store, included) {
+  let typeLabel, typeClass = '';
+  if (store.type === 'baseline') { typeLabel = `● Baseline · MRR firmado`; typeClass = 'baseline'; }
+  else if (store.type === 'dk')  { typeLabel = `◆ Dark Kitchen · ${store.hub_name}`; }
+  else                            { typeLabel = `■ B&M · Slot ${store.slot} · ${store.hub_name}`; }
+  const rev = store.gmv_mxn * store.take_rate_pct / 100;
+  const excludedNote = (store.type === 'baseline' && included === false)
+    ? `<div class="tt-excluded">⚠ NO suma a meta</div>` : '';
+  tooltip.innerHTML = `
+    <div class="tt-type ${typeClass}">${typeLabel}</div>
+    <div class="tt-title">${store.name}</div>
+    <div class="tt-row"><span>GMV</span><strong>${fmtCcyNoSuffix(store.gmv_mxn)}</strong></div>
+    <div class="tt-row"><span>Take Rate</span><strong>${store.take_rate_pct.toFixed(1)}%</strong></div>
+    <div class="tt-row"><span>Rappi Rev.</span><strong>${fmtCcyNoSuffix(rev)}</strong></div>
+    ${store.city !== '—' ? `<div class="tt-row"><span>Ciudad</span><strong>${store.city}</strong></div>` : ''}
+    ${excludedNote}
+  `;
+  tooltip.classList.add('visible'); moveTooltip(e);
+}
+function showProjectedTooltip(e, proj, colLabel) {
+  const rev = proj.gmv_mxn * (proj.take_rate_pct || 18) / 100;
+  const openDate = proj.open_date ? new Date(proj.open_date).toLocaleDateString('es-MX', { month: 'short', year: 'numeric' }) : '—';
+  tooltip.innerHTML = `
+    <div class="tt-type projected">✦ Pipeline · ${colLabel}</div>
+    <div class="tt-title">${proj.name}</div>
+    <div class="tt-row"><span>GMV esperado</span><strong>${fmtCcyNoSuffix(proj.gmv_mxn)}</strong></div>
+    <div class="tt-row"><span>Take Rate</span><strong>${(proj.take_rate_pct || 18).toFixed(1)}%</strong></div>
+    <div class="tt-row"><span>Rappi Rev.</span><strong>${fmtCcyNoSuffix(rev)}</strong></div>
+    <div class="tt-row"><span>Apertura</span><strong>${openDate}</strong></div>
+    <div class="tt-excluded">Click para editar</div>
+  `;
+  tooltip.classList.add('visible'); moveTooltip(e);
+}
+function moveTooltip(e) {
+  const pad = 14;
+  let x = e.clientX + pad, y = e.clientY + pad;
+  const rect = tooltip.getBoundingClientRect();
+  if (x + rect.width > window.innerWidth - 10) x = e.clientX - rect.width - pad;
+  if (y + rect.height > window.innerHeight - 10) y = e.clientY - rect.height - pad;
+  tooltip.style.left = `${x}px`; tooltip.style.top = `${y}px`;
+}
+function hideTooltip() { tooltip.classList.remove('visible'); }
+
+// ---------- MODAL SYSTEM (universal) ----------
+const modal = document.getElementById('modal-backdrop');
+const modalContent = document.getElementById('modal-content');
+
+function closeModal() {
+  modal.classList.remove('visible');
+  modalContent.classList.remove('mode-brand', 'mode-dk');
+  state.modalCtx = null;
+}
+
+// ---- PROJECTION MODAL ----
+function openProjectionModal(brandId, colKey, colLabel, existingProj) {
+  const brand = state.data.brands.find(b => b.id === brandId);
+  state.modalCtx = { type: 'projection', brandId, colKey, colLabel, projId: existingProj ? existingProj.id : null };
+  modalContent.classList.remove('mode-brand', 'mode-dk');
+
+  document.getElementById('modal-header-text').textContent = 'Planear';
+  document.getElementById('modal-slot-label').textContent = existingProj ? existingProj.name : colLabel;
+  document.getElementById('modal-context').textContent = `${brand.name} · ${colLabel} · ${existingProj ? 'Editar' : 'Nueva'}`;
+
+  const body = document.getElementById('modal-body');
+  body.innerHTML = `
+    <div class="modal-grid">
+      <div class="modal-field full">
+        <label>Nombre</label>
+        <input type="text" id="mp-name" placeholder="Ej: Rosetta Interlomas" />
+      </div>
+      <div class="modal-field">
+        <label>GMV esperado (MXN/mes)</label>
+        <input type="number" id="mp-gmv" placeholder="150000" min="0" step="10000" />
+      </div>
+      <div class="modal-field">
+        <label>Take Rate (%)</label>
+        <input type="number" id="mp-take" placeholder="18" step="0.5" min="0" max="100" />
+      </div>
+      <div class="modal-field full">
+        <label>Fecha de apertura</label>
+        <input type="date" id="mp-date" />
+      </div>
+    </div>
+    <div class="modal-calc">
+      <span>Rappi Revenue (MXN/mes)</span>
+      <strong id="mp-calc">$0</strong>
+    </div>
+  `;
+
+  const nameI = document.getElementById('mp-name');
+  const gmvI = document.getElementById('mp-gmv');
+  const takeI = document.getElementById('mp-take');
+  const dateI = document.getElementById('mp-date');
+  nameI.value = existingProj ? existingProj.name : '';
+  gmvI.value  = existingProj ? existingProj.gmv_mxn : '';
+  takeI.value = existingProj ? existingProj.take_rate_pct : (colKey.startsWith('dk-') ? 22 : 17);
+  dateI.value = existingProj ? existingProj.open_date : '';
+
+  const updateCalc = () => {
+    const gmv = parseFloat(gmvI.value) || 0;
+    const take = parseFloat(takeI.value) || 0;
+    document.getElementById('mp-calc').textContent = `$${Math.round(gmv * take / 100).toLocaleString('en-US')}`;
+  };
+  gmvI.addEventListener('input', updateCalc);
+  takeI.addEventListener('input', updateCalc);
+  updateCalc();
+
+  document.getElementById('btn-delete').style.display = existingProj ? 'block' : 'none';
+  modal.classList.add('visible');
+  setTimeout(() => nameI.focus(), 50);
+}
+
+// ---- BRAND MODAL ----
+function openBrandEditModal(brand) {
+  state.modalCtx = { type: 'brand', brandId: brand ? brand.id : null };
+  modalContent.classList.remove('mode-dk'); modalContent.classList.add('mode-brand');
+
+  document.getElementById('modal-header-text').textContent = brand ? 'Editar' : 'Nuevo';
+  document.getElementById('modal-slot-label').textContent = brand ? brand.name : 'Aliado';
+  document.getElementById('modal-context').textContent = brand ? `Editar brand · ID: ${brand.id}` : 'Agregar nuevo aliado al portfolio';
+
+  const body = document.getElementById('modal-body');
+  body.innerHTML = `
+    <div class="modal-grid">
+      <div class="modal-field full">
+        <label>Nombre del brand</label>
+        <input type="text" id="mb-name" placeholder="Ej: El Moro" />
+      </div>
+      <div class="modal-field full">
+        <label>Operator / Grupo</label>
+        <input type="text" id="mb-op" placeholder="Ej: Moro Hermanos SA" />
+      </div>
+      <div class="modal-field">
+        <label>Investment Year-1 (USD)</label>
+        <input type="number" id="mb-inv" min="0" step="10000" placeholder="100000" />
+      </div>
+      <div class="modal-field">
+        <label>Baseline GMV (MXN/mes)</label>
+        <input type="number" id="mb-base" min="0" step="10000" placeholder="0" />
+      </div>
+      <div class="modal-field full">
+        <label class="modal-checkbox-label">
+          <input type="checkbox" id="mb-signed" />
+          Baseline firmada (cuenta al $20M)
+        </label>
+        <div class="hint">Si está activa, la baseline suma al MRR contable</div>
+      </div>
+    </div>
+  `;
+  const nameI = document.getElementById('mb-name');
+  const opI = document.getElementById('mb-op');
+  const invI = document.getElementById('mb-inv');
+  const baseI = document.getElementById('mb-base');
+  const signedI = document.getElementById('mb-signed');
+  nameI.value = brand ? brand.name : '';
+  opI.value = brand ? brand.operator : '';
+  invI.value = brand ? brand.investmentUsd : '';
+  baseI.value = brand ? brand.baseline : '';
+  signedI.checked = brand ? brand.baselineSigned : true;
+
+  document.getElementById('btn-delete').style.display = brand ? 'block' : 'none';
+  modal.classList.add('visible');
+  setTimeout(() => nameI.focus(), 50);
+}
+
+// ---- DK MODAL ----
+function openDkEditModal(hub) {
+  state.modalCtx = { type: 'dk', hubId: hub ? hub.id : null };
+  modalContent.classList.remove('mode-brand'); modalContent.classList.add('mode-dk');
+
+  document.getElementById('modal-header-text').textContent = hub ? 'Editar' : 'Nuevo';
+  document.getElementById('modal-slot-label').textContent = hub ? `DK ${hub.name}` : 'Dark Kitchen';
+  document.getElementById('modal-context').textContent = hub ? `Editar hub · ID: ${hub.id}` : 'Agregar ubicación de Dark Kitchen';
+
+  const body = document.getElementById('modal-body');
+  body.innerHTML = `
+    <div class="modal-grid">
+      <div class="modal-field full">
+        <label>Nombre de la ubicación</label>
+        <input type="text" id="md-name" placeholder="Ej: Cuajimalpa" />
+      </div>
+      <div class="modal-field full">
+        <label>Ciudad</label>
+        <input type="text" id="md-city" placeholder="CDMX · GDL · MTY · etc" />
+      </div>
+    </div>
+    ${hub ? `
+      <div style="margin-top:16px; padding:10px 14px; background:var(--paper-warm); font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--muted);">
+        Al eliminar el DK se borran los stores y proyecciones asociados en <strong style="color:var(--ink);">todas las brands</strong>.
+      </div>
+    ` : `
+      <div class="modal-calc" style="border-left-color: var(--dk);">
+        <span>El hub aparece en el grid cuando tiene al menos un store asignado</span>
+      </div>
+    `}
+  `;
+  const nameI = document.getElementById('md-name');
+  const cityI = document.getElementById('md-city');
+  nameI.value = hub ? hub.name : '';
+  cityI.value = hub ? hub.city : 'CDMX';
+
+  document.getElementById('btn-delete').style.display = hub ? 'block' : 'none';
+  modal.classList.add('visible');
+  setTimeout(() => nameI.focus(), 50);
+}
+
+// ---- SAVE HANDLER ----
+document.getElementById('btn-save').addEventListener('click', () => {
+  const ctx = state.modalCtx; if (!ctx) return;
+
+  if (ctx.type === 'projection') {
+    const name = document.getElementById('mp-name').value.trim();
+    const gmv = parseFloat(document.getElementById('mp-gmv').value) || 0;
+    const take = parseFloat(document.getElementById('mp-take').value) || 18;
+    const date = document.getElementById('mp-date').value;
+    if (!name) { alert('Dale un nombre'); return; }
+    if (gmv <= 0) { alert('GMV debe ser > 0'); return; }
+    const brand = state.data.brands.find(b => b.id === ctx.brandId);
+    if (!brand.projections) brand.projections = [];
+    if (ctx.projId) {
+      const p = brand.projections.find(x => x.id === ctx.projId);
+      if (p) { p.name = name; p.gmv_mxn = gmv; p.take_rate_pct = take; p.open_date = date; }
+    } else {
+      brand.projections.push({
+        id: `proj-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
+        column: ctx.colKey, name, gmv_mxn: gmv, take_rate_pct: take, open_date: date
+      });
+    }
+    saveAll();
+    closeModal();
+    if (state.viewMode === 'actual') setViewMode('planned'); else render();
+  }
+
+  else if (ctx.type === 'brand') {
+    const name = document.getElementById('mb-name').value.trim();
+    const op = document.getElementById('mb-op').value.trim();
+    const inv = parseFloat(document.getElementById('mb-inv').value) || 0;
+    const base = parseFloat(document.getElementById('mb-base').value) || 0;
+    const signed = document.getElementById('mb-signed').checked;
+    if (!name) { alert('Dale un nombre'); return; }
+
+    if (ctx.brandId) {
+      const b = state.data.brands.find(x => x.id === ctx.brandId);
+      const oldBaseline = b.baseline;
+      b.name = name; b.operator = op; b.investmentUsd = inv;
+      b.baseline = base; b.baselineSigned = signed;
+      // Update baseline pseudo-store
+      const baseStore = b.stores.find(s => s.type === 'baseline');
+      if (base > 0) {
+        if (baseStore) { baseStore.gmv_mxn = base; baseStore.name = `${name} Baseline`; }
+        else b.stores.push({
+          id: `${b.id}-baseline`, name: `${name} Baseline`, type: 'baseline',
+          slot: null, hub_id: null, hub_name: 'Baseline', city: '—',
+          gmv_mxn: base, take_rate_pct: 17
+        });
+      } else if (baseStore) {
+        b.stores = b.stores.filter(s => s.type !== 'baseline');
+      }
+    } else {
+      const newId = slugify(name);
+      // Guard against ID collision
+      if (state.data.brands.some(x => x.id === newId)) {
+        alert(`Ya existe un brand con ID "${newId}". Usa otro nombre.`); return;
+      }
+      const newBrand = {
+        id: newId, name, operator: op, investmentUsd: inv,
+        baseline: base, baselineSigned: signed, maxSlots: MIN_BM_SLOTS,
+        stores: [], projections: []
+      };
+      if (base > 0) {
+        newBrand.stores.push({
+          id: `${newId}-baseline`, name: `${name} Baseline`, type: 'baseline',
+          slot: null, hub_id: null, hub_name: 'Baseline', city: '—',
+          gmv_mxn: base, take_rate_pct: 17
+        });
+      }
+      state.data.brands.push(newBrand);
+      toast(`Brand "${name}" agregado`, 'ok');
+    }
+    saveAll(); closeModal(); render();
+  }
+
+  else if (ctx.type === 'dk') {
+    const name = document.getElementById('md-name').value.trim();
+    const city = document.getElementById('md-city').value.trim() || 'CDMX';
+    if (!name) { alert('Dale un nombre'); return; }
+
+    if (ctx.hubId) {
+      const h = state.data.hubs.find(x => x.id === ctx.hubId);
+      h.name = name; h.city = city;
+    } else {
+      const newId = 'dk-' + slugify(name);
+      if (state.data.hubs.some(x => x.id === newId)) {
+        alert(`Ya existe un DK con ID "${newId}". Usa otro nombre.`); return;
+      }
+      state.data.hubs.push({ id: newId, name, city });
+      toast(`DK "${name}" agregado (aparecerá al tener primer store)`, 'ok');
+    }
+    saveAll(); closeModal(); render();
+  }
+});
+
+// ---- DELETE HANDLER ----
+document.getElementById('btn-delete').addEventListener('click', () => {
+  const ctx = state.modalCtx; if (!ctx) return;
+
+  if (ctx.type === 'projection') {
+    if (!confirm('¿Eliminar este plan?')) return;
+    const brand = state.data.brands.find(b => b.id === ctx.brandId);
+    brand.projections = (brand.projections || []).filter(p => p.id !== ctx.projId);
+    saveAll(); closeModal(); render();
+  }
+
+  else if (ctx.type === 'brand') {
+    const brand = state.data.brands.find(b => b.id === ctx.brandId);
+    if (!confirm(`¿Eliminar el brand "${brand.name}" con todos sus stores y proyecciones? Esta acción no se puede deshacer.`)) return;
+    state.data.brands = state.data.brands.filter(b => b.id !== ctx.brandId);
+    toast(`Brand "${brand.name}" eliminado`, 'warn');
+    saveAll(); closeModal(); render();
+  }
+
+  else if (ctx.type === 'dk') {
+    const hub = state.data.hubs.find(h => h.id === ctx.hubId);
+    if (!confirm(`¿Eliminar DK "${hub.name}"? Se borrarán todos los stores y proyecciones en este hub across todas las brands.`)) return;
+    state.data.hubs = state.data.hubs.filter(h => h.id !== ctx.hubId);
+    state.data.brands.forEach(b => {
+      b.stores = b.stores.filter(s => s.hub_id !== ctx.hubId);
+      b.projections = (b.projections || []).filter(p => p.column !== `dk-${ctx.hubId}`);
+    });
+    toast(`DK "${hub.name}" eliminado`, 'warn');
+    saveAll(); closeModal(); render();
+  }
+});
+
+document.getElementById('btn-cancel').addEventListener('click', closeModal);
+document.getElementById('modal-backdrop').addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('visible')) closeModal(); });
+
+// ---- VIEW MODE + CONTROLS ----
+function setViewMode(mode) {
+  state.viewMode = mode;
+  document.getElementById('mode-actual').classList.toggle('active', mode === 'actual');
+  document.getElementById('mode-planned').classList.toggle('active', mode === 'planned');
+  saveAll(); render();
+}
+document.getElementById('mode-actual').addEventListener('click', () => setViewMode('actual'));
+document.getElementById('mode-planned').addEventListener('click', () => setViewMode('planned'));
+
+document.querySelectorAll('.ccy-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.ccy-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.currency = btn.dataset.ccy;
+    saveAll(); render();
+  });
+});
+document.getElementById('fx-input').addEventListener('input', (e) => {
+  const v = parseFloat(e.target.value); if (v && v > 0) { state.fx = v; saveAll(); render(); }
+});
+document.getElementById('sheets-url-input').addEventListener('input', (e) => {
+  state.sheetsUrl = e.target.value.trim(); saveAll();
+});
+
+document.querySelectorAll('.chip[data-period]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.chip[data-period]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); state.period = btn.dataset.period;
+    document.getElementById('period-label').textContent = { mtd: 'April 2026 · MTD', l30d: 'Last 30 Days', l90d: 'Last 90 Days' }[state.period];
+    render();
+  });
+});
+document.querySelectorAll('.chip[data-sort]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.chip[data-sort]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); state.sortBy = btn.dataset.sort; render();
+  });
+});
+document.getElementById('bulk-baseline-all').addEventListener('click', () => {
+  state.data.brands.forEach(b => { if (b.baseline > 0) b.baselineSigned = true; });
+  saveAll(); render();
+});
+document.getElementById('bulk-baseline-none').addEventListener('click', () => {
+  state.data.brands.forEach(b => { b.baselineSigned = false; });
+  saveAll(); render();
+});
+document.getElementById('clear-projections').addEventListener('click', () => {
+  if (!confirm('¿Borrar TODOS los planes?')) return;
+  state.data.brands.forEach(b => { b.projections = []; });
+  saveAll(); render();
+});
+document.getElementById('btn-add-brand').addEventListener('click', () => openBrandEditModal(null));
+document.getElementById('btn-sync').addEventListener('click', syncToSheets);
+document.getElementById('btn-load').addEventListener('click', loadFromSheets);
+
+// ---- INIT ----
+(function init() {
+  const loaded = loadAll();
+  if (loaded && loaded.data && loaded.data.brands && loaded.data.hubs) {
+    state.data = loaded.data;
+    if (loaded.settings) {
+      if (loaded.settings.fx) state.fx = loaded.settings.fx;
+      if (loaded.settings.currency) state.currency = loaded.settings.currency;
+      if (loaded.settings.sheetsUrl) state.sheetsUrl = loaded.settings.sheetsUrl;
+      if (loaded.settings.viewMode) state.viewMode = loaded.settings.viewMode;
+    }
+  } else {
+    state.data = seedData();
+  }
+
+  // Reflect loaded state in UI
+  document.getElementById('fx-input').value = state.fx.toFixed(2);
+  document.querySelectorAll('.ccy-btn').forEach(b => b.classList.toggle('active', b.dataset.ccy === state.currency));
+  if (state.sheetsUrl) document.getElementById('sheets-url-input').value = state.sheetsUrl;
+  setViewMode(state.viewMode);
+})();
+</script>
+
+</body>
+</html>
