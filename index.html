@@ -1629,7 +1629,7 @@ function render() {
     } else {
       baseCell.className = 'cell baseline-cell' + (brand.baselineSigned ? '' : ' excluded');
       baseCell.innerHTML = `<span class="cell-total" ${!brand.baselineSigned ? 'style="opacity:0.5; text-decoration: line-through;"' : ''}>${fmtCcyNoSuffix(brand.baseline)}</span>`;
-      baselineStores.forEach(store => baseCell.appendChild(makeStoreBlock(store, allGmvs, maxGmv, brand.baselineSigned)));
+      baselineStores.forEach(store => baseCell.appendChild(makeStoreBlock(store, allGmvs, maxGmv, brand.baselineSigned, brand)));
     }
     grid.appendChild(baseCell);
 
@@ -1677,7 +1677,7 @@ function render() {
         const actualGmv = hasActual ? storeInSlot.gmv_mxn : 0;
         const projGmv = projections.reduce((s,p) => s + p.gmv_mxn, 0);
         cell.innerHTML = `<span class="cell-total">${fmtCcyNoSuffix(actualGmv + projGmv)}${hasProj && hasActual ? ` <span style="color:var(--projected);font-size:8px;">+${fmtCcyNoSuffix(projGmv)}</span>` : ''}</span>`;
-        if (hasActual) cell.appendChild(makeStoreBlock(storeInSlot, allGmvs, maxGmv, true));
+        if (hasActual) cell.appendChild(makeStoreBlock(storeInSlot, allGmvs, maxGmv, true, brand));
         projections.forEach(p => cell.appendChild(makeProjectedBlock(p, brand.id, colKey, `B&M Slot ${String(slot).padStart(2,'0')}`, allGmvs, maxGmv)));
       }
       grid.appendChild(cell);
@@ -1704,7 +1704,7 @@ function render() {
         const actualGmv = storesInHub.reduce((s,x) => s + x.gmv_mxn, 0);
         const projGmv = projections.reduce((s,p) => s + p.gmv_mxn, 0);
         cell.innerHTML = `<span class="cell-total">${fmtCcyNoSuffix(actualGmv + projGmv)}${hasProj && hasActual ? ` <span style="color:var(--projected);font-size:8px;">+${fmtCcyNoSuffix(projGmv)}</span>` : ''}</span>`;
-        storesInHub.forEach(store => cell.appendChild(makeStoreBlock(store, allGmvs, maxGmv, true)));
+        storesInHub.forEach(store => cell.appendChild(makeStoreBlock(store, allGmvs, maxGmv, true, brand)));
         projections.forEach(p => cell.appendChild(makeProjectedBlock(p, brand.id, colKey, `DK ${hub.name}`, allGmvs, maxGmv)));
       }
       grid.appendChild(cell);
@@ -1816,12 +1816,13 @@ function render() {
   });
 }
 
-function makeStoreBlock(store, allGmvs, maxGmv, included) {
+function makeStoreBlock(store, allGmvs, maxGmv, included, brand) {
   const block = document.createElement('div');
   const tier = tierForGmv(store.gmv_mxn, allGmvs);
   let classes = `store-block ${store.type} tier-${tier}`;
   if (store.type === 'baseline' && !included) classes += ' excluded';
   block.className = classes;
+  block.style.cursor = 'pointer';
   if (state.blockSize === 'gmv') {
     const ratio = store.gmv_mxn / maxGmv;
     const side = Math.max(14, Math.sqrt(ratio) * 44);
@@ -1829,6 +1830,10 @@ function makeStoreBlock(store, allGmvs, maxGmv, included) {
   } else {
     block.style.width = '22px'; block.style.height = '22px';
   }
+  block.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (brand) openStoreEditModal(store, brand);
+  });
   block.addEventListener('mouseenter', (e) => showTooltip(e, store, included));
   block.addEventListener('mousemove', moveTooltip);
   block.addEventListener('mouseleave', hideTooltip);
@@ -1873,6 +1878,7 @@ function showTooltip(e, store, included) {
     <div class="tt-row"><span>Rappi Rev.</span><strong>${fmtCcyNoSuffix(rev)}</strong></div>
     ${store.city !== '—' ? `<div class="tt-row"><span>Ciudad</span><strong>${store.city}</strong></div>` : ''}
     ${excludedNote}
+    <div class="tt-excluded" style="color: var(--baseline);">Click para editar</div>
   `;
   tooltip.classList.add('visible'); moveTooltip(e);
 }
@@ -1908,6 +1914,71 @@ function closeModal() {
   modal.classList.remove('visible');
   modalContent.classList.remove('mode-brand', 'mode-dk');
   state.modalCtx = null;
+}
+
+// ---- STORE EDIT MODAL ----
+function openStoreEditModal(store, brand) {
+  state.modalCtx = { type: 'store', storeId: store.id, brandId: brand.id };
+  modalContent.classList.remove('mode-brand', 'mode-dk');
+
+  const typeLabels = { baseline: '● Baseline', bm: '■ B&M', dk: '◆ Dark Kitchen' };
+  document.getElementById('modal-header-text').textContent = 'Editar';
+  document.getElementById('modal-slot-label').textContent = store.name;
+  document.getElementById('modal-context').textContent = `${brand.name} · ${typeLabels[store.type] || store.type} · Editar store`;
+
+  const isBaseline = store.type === 'baseline';
+  const isDk = store.type === 'dk';
+  const body = document.getElementById('modal-body');
+  body.innerHTML = `
+    <div class="modal-grid">
+      <div class="modal-field full">
+        <label>Nombre</label>
+        <input type="text" id="ms-name" placeholder="Nombre del store" />
+      </div>
+      <div class="modal-field">
+        <label>GMV (MXN/mes)</label>
+        <input type="number" id="ms-gmv" min="0" step="10000" placeholder="150000" />
+      </div>
+      <div class="modal-field">
+        <label>Take Rate (%)</label>
+        <input type="number" id="ms-take" min="0" max="100" step="0.5" placeholder="17" />
+      </div>
+      ${!isBaseline ? `
+      <div class="modal-field">
+        <label>${isDk ? 'Hub' : 'Ubicación'}</label>
+        <input type="text" id="ms-loc" placeholder="${isDk ? 'Hub name' : 'Ej: Polanco'}" />
+      </div>
+      <div class="modal-field">
+        <label>Ciudad</label>
+        <input type="text" id="ms-city" placeholder="CDMX" />
+      </div>` : ''}
+    </div>
+    <div class="modal-calc">
+      <span>Rappi Revenue (MXN/mes)</span>
+      <strong id="ms-calc">$0</strong>
+    </div>
+  `;
+
+  document.getElementById('ms-name').value = store.name;
+  document.getElementById('ms-gmv').value = store.gmv_mxn;
+  document.getElementById('ms-take').value = store.take_rate_pct;
+  if (!isBaseline) {
+    document.getElementById('ms-loc').value = store.hub_name || '';
+    document.getElementById('ms-city').value = store.city || '';
+  }
+
+  const updateCalc = () => {
+    const gmv = parseFloat(document.getElementById('ms-gmv').value) || 0;
+    const take = parseFloat(document.getElementById('ms-take').value) || 0;
+    document.getElementById('ms-calc').textContent = `$${Math.round(gmv * take / 100).toLocaleString('en-US')}`;
+  };
+  document.getElementById('ms-gmv').addEventListener('input', updateCalc);
+  document.getElementById('ms-take').addEventListener('input', updateCalc);
+  updateCalc();
+
+  document.getElementById('btn-delete').style.display = 'block';
+  modal.classList.add('visible');
+  setTimeout(() => document.getElementById('ms-name').focus(), 50);
 }
 
 // ---- PROJECTION MODAL ----
@@ -2067,7 +2138,32 @@ function openDkEditModal(hub) {
 document.getElementById('btn-save').addEventListener('click', () => {
   const ctx = state.modalCtx; if (!ctx) return;
 
-  if (ctx.type === 'projection') {
+  if (ctx.type === 'store') {
+    const name = document.getElementById('ms-name').value.trim();
+    const gmv = parseFloat(document.getElementById('ms-gmv').value) || 0;
+    const take = parseFloat(document.getElementById('ms-take').value) || 0;
+    if (!name) { alert('Dale un nombre'); return; }
+    if (gmv <= 0) { alert('GMV debe ser > 0'); return; }
+    const brand = state.data.brands.find(b => b.id === ctx.brandId);
+    const store = brand.stores.find(s => s.id === ctx.storeId);
+    if (store) {
+      store.name = name;
+      store.gmv_mxn = gmv;
+      store.take_rate_pct = take;
+      if (store.type !== 'baseline') {
+        const locEl = document.getElementById('ms-loc');
+        const cityEl = document.getElementById('ms-city');
+        if (locEl) store.hub_name = locEl.value.trim();
+        if (cityEl) store.city = cityEl.value.trim();
+      }
+      if (store.type === 'baseline') {
+        brand.baseline = gmv;
+      }
+    }
+    saveAll(); closeModal(); render();
+  }
+
+  else if (ctx.type === 'projection') {
     const name = document.getElementById('mp-name').value.trim();
     const gmv = parseFloat(document.getElementById('mp-gmv').value) || 0;
     const take = parseFloat(document.getElementById('mp-take').value) || 18;
@@ -2163,7 +2259,21 @@ document.getElementById('btn-save').addEventListener('click', () => {
 document.getElementById('btn-delete').addEventListener('click', () => {
   const ctx = state.modalCtx; if (!ctx) return;
 
-  if (ctx.type === 'projection') {
+  if (ctx.type === 'store') {
+    const brand = state.data.brands.find(b => b.id === ctx.brandId);
+    const store = brand.stores.find(s => s.id === ctx.storeId);
+    const label = store ? store.name : 'este store';
+    if (!confirm(`¿Eliminar "${label}"? Esta acción no se puede deshacer.`)) return;
+    brand.stores = brand.stores.filter(s => s.id !== ctx.storeId);
+    if (store && store.type === 'baseline') {
+      brand.baseline = 0;
+      brand.baselineSigned = false;
+    }
+    toast(`"${label}" eliminado`, 'warn');
+    saveAll(); closeModal(); render();
+  }
+
+  else if (ctx.type === 'projection') {
     if (!confirm('¿Eliminar este plan?')) return;
     const brand = state.data.brands.find(b => b.id === ctx.brandId);
     brand.projections = (brand.projections || []).filter(p => p.id !== ctx.projId);
