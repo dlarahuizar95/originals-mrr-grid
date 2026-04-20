@@ -1666,7 +1666,7 @@ function render() {
 
       if (!storeInSlot && projections.length === 0) {
         cell.className = 'cell slot-empty' + cellClass;
-        cell.onclick = () => openProjectionModal(brand.id, colKey, `B&M Slot ${String(slot).padStart(2,'0')}`, null);
+        cell.onclick = () => openAddBlockModal(brand.id, colKey, `B&M Slot ${String(slot).padStart(2,'0')}`, 'bm', { slot });
       } else {
         const hasActual = !!storeInSlot;
         const hasProj = projections.length > 0;
@@ -1693,8 +1693,13 @@ function render() {
 
       if (storesInHub.length === 0 && projections.length === 0) {
         cell.className = 'cell slot-empty' + cellClass;
-        cell.onclick = () => openProjectionModal(brand.id, colKey, `DK ${hub.name}`, null);
+        cell.onclick = () => openAddBlockModal(brand.id, colKey, `DK ${hub.name}`, 'dk', { hubId: hub.id, hubName: hub.name, city: hub.city });
       } else {
+        cell.style.cursor = 'copy';
+        cell.addEventListener('click', (e) => {
+          if (e.target !== cell) return;
+          openAddBlockModal(brand.id, colKey, `DK ${hub.name}`, 'dk', { hubId: hub.id, hubName: hub.name, city: hub.city });
+        });
         const hasActual = storesInHub.length > 0;
         const hasProj = projections.length > 0;
         let cls = 'cell' + cellClass;
@@ -2040,6 +2045,84 @@ function openProjectionModal(brandId, colKey, colLabel, existingProj) {
   setTimeout(() => nameI.focus(), 50);
 }
 
+// ---- ADD BLOCK MODAL (actual or planned, from an empty cell) ----
+function openAddBlockModal(brandId, colKey, colLabel, kind, meta) {
+  const brand = state.data.brands.find(b => b.id === brandId);
+  state.modalCtx = { type: 'addBlock', brandId, colKey, colLabel, kind, meta };
+  modalContent.classList.remove('mode-brand', 'mode-dk');
+
+  document.getElementById('modal-header-text').textContent = 'Nuevo bloque';
+  document.getElementById('modal-slot-label').textContent = colLabel;
+  document.getElementById('modal-context').textContent = `${brand.name} · ${colLabel} · Agregar`;
+
+  const defaultTake = kind === 'dk' ? 22 : 17;
+  const body = document.getElementById('modal-body');
+  body.innerHTML = `
+    <div class="modal-grid">
+      <div class="modal-field full">
+        <label>Tipo de bloque</label>
+        <div style="display:flex; gap:14px; padding:4px 0; font-family:'JetBrains Mono',monospace; font-size:11px;">
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="ab-mode" value="actual" checked /> Actual</label>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="ab-mode" value="planned" /> Planeado</label>
+        </div>
+      </div>
+      <div class="modal-field full">
+        <label>Nombre</label>
+        <input type="text" id="ab-name" placeholder="Ej: Rosetta Interlomas" />
+      </div>
+      <div class="modal-field">
+        <label>GMV (MXN/mes)</label>
+        <input type="number" id="ab-gmv" min="0" step="10000" placeholder="150000" />
+      </div>
+      <div class="modal-field">
+        <label>Take Rate (%)</label>
+        <input type="number" id="ab-take" min="0" max="100" step="0.5" value="${defaultTake}" />
+      </div>
+      ${kind === 'bm' ? `
+      <div class="modal-field">
+        <label>Ubicación</label>
+        <input type="text" id="ab-loc" placeholder="Ej: Polanco" />
+      </div>
+      <div class="modal-field">
+        <label>Ciudad</label>
+        <input type="text" id="ab-city" value="CDMX" />
+      </div>` : ''}
+      <div class="modal-field full" id="ab-date-wrap" style="display:none;">
+        <label>Fecha de apertura</label>
+        <input type="date" id="ab-date" />
+      </div>
+    </div>
+    <div class="modal-calc">
+      <span>Rappi Revenue (MXN/mes)</span>
+      <strong id="ab-calc">$0</strong>
+    </div>
+  `;
+
+  const nameI = document.getElementById('ab-name');
+  const gmvI = document.getElementById('ab-gmv');
+  const takeI = document.getElementById('ab-take');
+  const dateWrap = document.getElementById('ab-date-wrap');
+
+  document.querySelectorAll('input[name="ab-mode"]').forEach(r => {
+    r.addEventListener('change', () => {
+      dateWrap.style.display = r.value === 'planned' ? '' : 'none';
+    });
+  });
+
+  const updateCalc = () => {
+    const gmv = parseFloat(gmvI.value) || 0;
+    const take = parseFloat(takeI.value) || 0;
+    document.getElementById('ab-calc').textContent = `$${Math.round(gmv * take / 100).toLocaleString('en-US')}`;
+  };
+  gmvI.addEventListener('input', updateCalc);
+  takeI.addEventListener('input', updateCalc);
+  updateCalc();
+
+  document.getElementById('btn-delete').style.display = 'none';
+  modal.classList.add('visible');
+  setTimeout(() => nameI.focus(), 50);
+}
+
 // ---- BRAND MODAL ----
 function openBrandEditModal(brand) {
   state.modalCtx = { type: 'brand', brandId: brand ? brand.id : null };
@@ -2161,6 +2244,45 @@ document.getElementById('btn-save').addEventListener('click', () => {
       }
     }
     saveAll(); closeModal(); render();
+  }
+
+  else if (ctx.type === 'addBlock') {
+    const name = document.getElementById('ab-name').value.trim();
+    const gmv = parseFloat(document.getElementById('ab-gmv').value) || 0;
+    const take = parseFloat(document.getElementById('ab-take').value) || (ctx.kind === 'dk' ? 22 : 17);
+    const mode = document.querySelector('input[name="ab-mode"]:checked').value;
+    if (!name) { alert('Dale un nombre'); return; }
+    if (gmv <= 0) { alert('GMV debe ser > 0'); return; }
+    const brand = state.data.brands.find(b => b.id === ctx.brandId);
+
+    if (mode === 'actual') {
+      const locEl = document.getElementById('ab-loc');
+      const cityEl = document.getElementById('ab-city');
+      const newStore = {
+        id: `${brand.id}-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
+        name,
+        type: ctx.kind,
+        gmv_mxn: gmv,
+        take_rate_pct: take,
+        slot: ctx.kind === 'bm' ? ctx.meta.slot : null,
+        hub_id: ctx.kind === 'dk' ? ctx.meta.hubId : null,
+        hub_name: ctx.kind === 'dk' ? ctx.meta.hubName : (locEl ? locEl.value.trim() || '—' : '—'),
+        city: ctx.kind === 'dk' ? ctx.meta.city : (cityEl ? cityEl.value.trim() || 'CDMX' : 'CDMX')
+      };
+      brand.stores.push(newStore);
+      toast(`Store "${name}" agregado`, 'ok');
+      saveAll(); closeModal(); render();
+    } else {
+      const date = document.getElementById('ab-date').value;
+      if (!brand.projections) brand.projections = [];
+      brand.projections.push({
+        id: `proj-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
+        column: ctx.colKey, name, gmv_mxn: gmv, take_rate_pct: take, open_date: date
+      });
+      toast(`Plan "${name}" agregado`, 'ok');
+      saveAll(); closeModal();
+      if (state.viewMode === 'actual') setViewMode('planned'); else render();
+    }
   }
 
   else if (ctx.type === 'projection') {
