@@ -242,6 +242,16 @@
   .col-header.type-dk-group-start { border-left: 3px solid var(--rule); }
   .col-header.type-dk { background: var(--paper-deep); cursor: pointer; }
   .col-header.type-dk:hover { background: var(--paper-warm); }
+  .col-header.type-dk.type-dk-aliado { background: rgba(194, 107, 45, 0.07); border-top: 2px solid var(--dk); }
+  .col-header .col-cap-tag {
+    display: inline-block; align-self: flex-start;
+    font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 1px 5px; margin-top: 3px;
+    border: 1px solid var(--hairline-strong);
+  }
+  .col-header .col-cap-tag.rappi { color: var(--investment); border-color: var(--investment); }
+  .col-header .col-cap-tag.aliado { color: var(--dk); border-color: var(--dk); background: var(--paper); }
   .col-header.type-metric {
     background: var(--ink); color: var(--paper); border-left: 3px solid var(--rule);
   }
@@ -479,6 +489,11 @@
   .metric-mrr .pct {
     color: var(--accent); font-weight: 500; font-size: 10px; margin-left: 4px;
   }
+  .metric-rev {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600;
+    color: var(--baseline); margin-top: 2px; letter-spacing: 0.02em;
+  }
+  .metric-rev .rev-label { color: var(--muted); font-weight: 400; margin-right: 4px; }
   .metric-multiple {
     font-family: 'Fraunces', serif; font-weight: 700; font-size: 18px;
     font-variation-settings: 'opsz' 144; margin-top: 4px; line-height: 1;
@@ -595,12 +610,14 @@
     text-transform: uppercase; letter-spacing: 0.14em;
     color: var(--muted); margin-bottom: 6px; font-weight: 700;
   }
-  .modal-field input {
+  .modal-field input,
+  .modal-field select {
     font-family: 'Inter', sans-serif; font-size: 14px;
     padding: 10px 12px; border: 1px solid var(--hairline-strong);
     background: var(--paper); color: var(--ink); transition: border-color 0.15s;
   }
-  .modal-field input:focus {
+  .modal-field input:focus,
+  .modal-field select:focus {
     outline: none; border-color: var(--projected);
     box-shadow: 0 0 0 2px rgba(139, 111, 184, 0.15);
   }
@@ -641,6 +658,57 @@
   .modal.mode-dk .btn.primary { background: var(--dk); border-color: var(--dk); }
   .btn.danger { color: var(--accent-dk); border-color: var(--hairline-strong); }
   .btn.danger:hover { background: var(--accent-dk); color: var(--paper); border-color: var(--accent-dk); }
+
+  /* Manage DKs list */
+  .dk-manage-list { display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow-y: auto; }
+  .dk-manage-row {
+    display: grid; grid-template-columns: 1fr auto auto auto auto;
+    align-items: center; gap: 12px;
+    padding: 10px 14px; background: var(--paper-warm);
+    border: 1px solid var(--hairline);
+  }
+  .dk-manage-row.is-hidden { opacity: 0.78; border-style: dashed; }
+  .dk-manage-row .dk-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .dk-manage-row .dk-name {
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 14px;
+    color: var(--ink); letter-spacing: -0.01em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .dk-manage-row .dk-meta {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .dk-owner-tag {
+    display: inline-block; padding: 1px 6px;
+    border: 1px solid var(--hairline-strong); font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  .dk-owner-tag.rappi { color: var(--investment); border-color: var(--investment); }
+  .dk-owner-tag.aliado { color: var(--dk); border-color: var(--dk); background: rgba(194, 107, 45, 0.06); }
+  .dk-manage-row .dk-counts {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--ink-soft); white-space: nowrap;
+  }
+  .dk-manage-row .dk-toggle {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
+    cursor: pointer; user-select: none;
+  }
+  .dk-manage-row .dk-toggle input { width: auto; margin: 0; cursor: pointer; }
+  .dk-manage-row .icon-btn {
+    background: transparent; border: 1px solid var(--hairline);
+    width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--ink-soft); font-size: 13px;
+    transition: all 0.15s;
+  }
+  .dk-manage-row .icon-btn:hover { border-color: var(--ink); color: var(--ink); }
+  .dk-manage-row .icon-btn.danger:hover { border-color: var(--accent-dk); color: var(--accent-dk); }
+  .dk-manage-empty {
+    padding: 20px; text-align: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--muted); background: var(--paper-warm);
+  }
 
   .footer-summary {
     margin-top: 32px; padding-top: 20px; border-top: 2px solid var(--rule);
@@ -834,6 +902,7 @@
       </div>
       <div class="filter-group">
         <button class="chip primary" id="btn-add-brand">+ Brand</button>
+        <button class="chip" id="btn-manage-dks">◆ Manage DKs</button>
         <button class="chip danger" id="clear-projections">Borrar planes</button>
       </div>
     </div>
@@ -872,7 +941,7 @@
     <div class="summary-stat">
       <div class="label">Blended Multiple</div>
       <div class="value" id="foot-multiple">—</div>
-      <div class="breakdown" id="foot-multiple-bd">MRR / Investment</div>
+      <div class="breakdown" id="foot-multiple-bd">GMV / Investment</div>
     </div>
   </section>
 
@@ -1014,14 +1083,16 @@ function seedData() {
       stores.push({
         id: `${cfg.id}-baseline`, name: `${cfg.name} Baseline`, type: 'baseline',
         slot: null, hub_id: null, hub_name: 'Baseline', city: '—',
-        gmv_mxn: cfg.baseline, take_rate_pct: 17
+        gmv_mxn: cfg.baseline, take_rate_pct: 17,
+        franchise_fee_mxn: 0, ebitda_mxn: 0
       });
     }
     cfg.bmStores.forEach(bm => {
       stores.push({
         id: `${cfg.id}-bm-${bm.slot}`, name: `${cfg.name} ${bm.loc}`, type: 'bm',
         slot: bm.slot, hub_id: null, hub_name: bm.loc, city: 'CDMX',
-        gmv_mxn: bm.gmv, take_rate_pct: 16
+        gmv_mxn: bm.gmv, take_rate_pct: 16,
+        franchise_fee_mxn: 0, ebitda_mxn: 0
       });
     });
     cfg.dkStores.forEach(dk => {
@@ -1029,7 +1100,8 @@ function seedData() {
       stores.push({
         id: `${cfg.id}-${dk.hubId}`, name: `${cfg.name} · DK ${hub.name}`, type: 'dk',
         slot: null, hub_id: dk.hubId, hub_name: hub.name, city: hub.city,
-        gmv_mxn: dk.gmv, take_rate_pct: 23
+        gmv_mxn: dk.gmv, take_rate_pct: 23,
+        franchise_fee_mxn: 0, ebitda_mxn: 0
       });
     });
     return {
@@ -1039,7 +1111,8 @@ function seedData() {
       stores, projections: []
     };
   });
-  return { hubs: [...DK_HUBS_SEED], brands };
+  const hubs = DK_HUBS_SEED.map(h => ({ ...h, owner_id: 'rappi', capex_usd: 0 }));
+  return { hubs, brands };
 }
 
 // ---------- SUPABASE ----------
@@ -1071,7 +1144,18 @@ async function saveToSupabase() {
 
     // Upsert hubs
     if (hubs.length) {
-      await sb.from('hubs').upsert(hubs.map(h => ({ id: h.id, name: h.name, city: h.city })), { onConflict: 'id' });
+      const fullHubs = hubs.map(h => ({
+        id: h.id, name: h.name, city: h.city,
+        owner_id: h.owner_id || 'rappi',
+        capex_usd: h.capex_usd || 0,
+        always_show: !!h.alwaysShow
+      }));
+      const { error } = await sb.from('hubs').upsert(fullHubs, { onConflict: 'id' });
+      if (error) {
+        const fallback = hubs.map(h => ({ id: h.id, name: h.name, city: h.city }));
+        await sb.from('hubs').upsert(fallback, { onConflict: 'id' });
+        console.warn('Supabase: hubs.owner_id / capex_usd / always_show columns missing — synced without them. Add the columns to persist.');
+      }
     }
 
     // Upsert brands, stores, projections
@@ -1085,11 +1169,24 @@ async function saveToSupabase() {
       // Replace stores for this brand
       await sb.from('stores').delete().eq('brand_id', b.id);
       if (b.stores.length) {
-        await sb.from('stores').insert(b.stores.map(s => ({
+        const fullPayload = b.stores.map(s => ({
           id: s.id, brand_id: b.id, name: s.name, type: s.type,
           slot: s.slot, hub_id: s.hub_id, hub_name: s.hub_name,
-          city: s.city, gmv_mxn: s.gmv_mxn, take_rate_pct: s.take_rate_pct
-        })));
+          city: s.city, gmv_mxn: s.gmv_mxn, take_rate_pct: s.take_rate_pct,
+          franchise_fee_mxn: s.franchise_fee_mxn || 0,
+          ebitda_mxn: s.ebitda_mxn || 0
+        }));
+        const { error } = await sb.from('stores').insert(fullPayload);
+        if (error) {
+          // Fallback: schema may not yet have franchise_fee_mxn / ebitda_mxn columns
+          const fallback = b.stores.map(s => ({
+            id: s.id, brand_id: b.id, name: s.name, type: s.type,
+            slot: s.slot, hub_id: s.hub_id, hub_name: s.hub_name,
+            city: s.city, gmv_mxn: s.gmv_mxn, take_rate_pct: s.take_rate_pct
+          }));
+          await sb.from('stores').insert(fallback);
+          console.warn('Supabase: stores.franchise_fee_mxn / stores.ebitda_mxn columns missing — synced without them. Add the columns to persist fees.');
+        }
       }
 
       // Replace projections for this brand
@@ -1136,7 +1233,12 @@ async function loadFromSupabase() {
 
     if (!brandsRes.data || brandsRes.data.length === 0) return null;
 
-    const hubs = (hubsRes.data || []).map(h => ({ id: h.id, name: h.name, city: h.city }));
+    const hubs = (hubsRes.data || []).map(h => ({
+      id: h.id, name: h.name, city: h.city,
+      owner_id: h.owner_id || 'rappi',
+      capex_usd: Number(h.capex_usd) || 0,
+      alwaysShow: !!h.always_show
+    }));
     const brands = (brandsRes.data || []).map(b => ({
       id: b.id, name: b.name, operator: b.operator,
       investmentUsd: Number(b.investment_usd) || 0,
@@ -1146,7 +1248,9 @@ async function loadFromSupabase() {
       stores: (storesRes.data || []).filter(s => s.brand_id === b.id).map(s => ({
         id: s.id, name: s.name, type: s.type, slot: s.slot,
         hub_id: s.hub_id, hub_name: s.hub_name, city: s.city,
-        gmv_mxn: Number(s.gmv_mxn) || 0, take_rate_pct: Number(s.take_rate_pct) || 0
+        gmv_mxn: Number(s.gmv_mxn) || 0, take_rate_pct: Number(s.take_rate_pct) || 0,
+        franchise_fee_mxn: Number(s.franchise_fee_mxn) || 0,
+        ebitda_mxn: Number(s.ebitda_mxn) || 0
       })),
       projections: (projRes.data || []).filter(p => p.brand_id === b.id).map(p => ({
         id: p.id, column: p.column_type, name: p.name,
@@ -1304,7 +1408,7 @@ function render() {
       if (p.column && p.column.startsWith('dk-')) usedHubIds.add(p.column.slice(3));
     });
   });
-  const visibleHubs = hubs.filter(h => usedHubIds.has(h.id));
+  const visibleHubs = hubs.filter(h => usedHubIds.has(h.id) || h.alwaysShow);
 
   // Max slots across all brands (global minimum 10)
   const maxSlotsGlobal = Math.max(MIN_BM_SLOTS, ...brands.map(b => b.maxSlots || MIN_BM_SLOTS));
@@ -1320,6 +1424,17 @@ function render() {
     const mrrActual = countedBase + growth;
     const mrrWithProj = mrrActual + projTotal;
 
+    // Other revenue streams (Franchise Fees + EBITDA) — per-store, not derived from GMV
+    const ffActual = b.stores.reduce((s,x) => {
+      if (x.type === 'baseline' && !b.baselineSigned) return s;
+      return s + (x.franchise_fee_mxn || 0);
+    }, 0);
+    const ebitdaActual = b.stores.reduce((s,x) => {
+      if (x.type === 'baseline' && !b.baselineSigned) return s;
+      return s + (x.ebitda_mxn || 0);
+    }, 0);
+    const revenueOther = ffActual + ebitdaActual;
+
     const actualRev = b.stores.reduce((s,x) => {
       if (x.type === 'baseline' && !b.baselineSigned) return s;
       return s + x.gmv_mxn * x.take_rate_pct/100;
@@ -1329,7 +1444,7 @@ function render() {
     const denom = includeProjected ? mrrWithProj : mrrActual;
     const blendedTake = denom > 0 ? (totalRev / denom) * 100 : 0;
 
-    return { ...b, baseline, bm, dk, growth, countedBase, mrrActual, mrrWithProj, projTotal, take: totalRev, blendedTake };
+    return { ...b, baseline, bm, dk, growth, countedBase, mrrActual, mrrWithProj, projTotal, take: totalRev, blendedTake, ffActual, ebitdaActual, revenueOther };
   });
 
   // Sort
@@ -1384,7 +1499,9 @@ function render() {
   const growthAll = bmTotalAll + dkTotalAll;
   const projectedAll = brandTotals.reduce((s,b) => s + b.projTotal, 0);
   const projectedCount = brandTotals.reduce((s,b) => s + (b.projections || []).length, 0);
-  const totalInvestedUsd = brandTotals.reduce((s,b) => s + (b.investmentUsd || 0), 0);
+  const brandsInvestedUsd = brandTotals.reduce((s,b) => s + (b.investmentUsd || 0), 0);
+  const rappiHubsCapexUsd = hubs.reduce((s,h) => s + ((h.owner_id || 'rappi') === 'rappi' ? (h.capex_usd || 0) : 0), 0);
+  const totalInvestedUsd = brandsInvestedUsd + rappiHubsCapexUsd;
 
   // Time-windowed projections
   const threeOut = new Date(CURRENT_DATE); threeOut.setMonth(threeOut.getMonth() + 3);
@@ -1543,10 +1660,14 @@ function render() {
   visibleHubs.forEach((hub, idx) => {
     const hubData = hubTotals[idx];
     const head = document.createElement('div');
-    head.className = 'col-header type-dk' + (idx === 0 ? ' type-dk-group-start' : '');
+    const ownerId = hub.owner_id || 'rappi';
+    const isAliado = ownerId !== 'rappi';
+    const ownerName = isAliado ? (state.data.brands.find(b => b.id === ownerId)?.name || ownerId) : 'Rappi';
+    head.className = 'col-header type-dk' + (idx === 0 ? ' type-dk-group-start' : '') + (isAliado ? ' type-dk-aliado' : '');
     head.innerHTML = `
       <span class="col-title">◆ DK ${String(idx+1).padStart(2,'0')}</span>
       <span class="col-sub">${hub.name} · ${hub.city}</span>
+      <span class="col-cap-tag ${isAliado ? 'aliado' : 'rappi'}">Cap: ${ownerName}</span>
       <span class="col-total">${fmtCcyNoSuffix(hubData.totalActual)}</span>
       ${hubData.totalProjected > 0 ? `<span class="projected-mini">+${fmtCcyNoSuffix(hubData.totalProjected)}</span>` : ''}
       <span class="col-edit-hint">✎</span>
@@ -1565,8 +1686,8 @@ function render() {
   const mHead = document.createElement('div');
   mHead.className = 'col-header type-metric';
   mHead.innerHTML = `
-    <span class="col-title">Σ MRR · Multiple</span>
-    <span class="col-sub">MRR / Investment</span>
+    <span class="col-title">Σ GMV · Multiple</span>
+    <span class="col-sub">GMV / Investment</span>
   `;
   grid.appendChild(mHead);
 
@@ -1730,8 +1851,9 @@ function render() {
     const payTier = payback === null ? 'null' : (payback <= 36 ? 'good' : payback <= 72 ? 'mid' : 'bad');
     metricCell.innerHTML = `
       <div class="metric-mrr">${fmtCcyNoSuffix(displayMrr)}<span class="pct">${((displayMrr/GOAL_MRR_MXN)*100).toFixed(1)}%</span></div>
+      ${brand.revenueOther > 0 ? `<div class="metric-rev"><span class="rev-label">Rev</span>${fmtCcyNoSuffix(brand.revenueOther)}</div>` : ''}
       <div class="metric-multiple ${multTier}">${multiple !== null ? `${multiple.toFixed(3)}×` : '—'}</div>
-      <div class="metric-label">MRR / Investment</div>
+      <div class="metric-label">GMV / Investment</div>
       <div class="metric-payback ${payTier}">${payback !== null ? `Payback ${payback.toFixed(0)}m` : 'Set investment'}</div>
     `;
     grid.appendChild(metricCell);
@@ -1873,6 +1995,8 @@ function showTooltip(e, store, included) {
   else if (store.type === 'dk')  { typeLabel = `◆ Dark Kitchen · ${store.hub_name}`; }
   else                            { typeLabel = `■ B&M · Slot ${store.slot} · ${store.hub_name}`; }
   const rev = store.gmv_mxn * store.take_rate_pct / 100;
+  const ff = store.franchise_fee_mxn || 0;
+  const eb = store.ebitda_mxn || 0;
   const excludedNote = (store.type === 'baseline' && included === false)
     ? `<div class="tt-excluded">⚠ NO suma a meta</div>` : '';
   tooltip.innerHTML = `
@@ -1881,6 +2005,8 @@ function showTooltip(e, store, included) {
     <div class="tt-row"><span>GMV</span><strong>${fmtCcyNoSuffix(store.gmv_mxn)}</strong></div>
     <div class="tt-row"><span>Take Rate</span><strong>${store.take_rate_pct.toFixed(1)}%</strong></div>
     <div class="tt-row"><span>Rappi Rev.</span><strong>${fmtCcyNoSuffix(rev)}</strong></div>
+    ${ff > 0 ? `<div class="tt-row"><span>Franchise Fee</span><strong>${fmtCcyNoSuffix(ff)}</strong></div>` : ''}
+    ${eb > 0 ? `<div class="tt-row"><span>EBITDA</span><strong>${fmtCcyNoSuffix(eb)}</strong></div>` : ''}
     ${store.city !== '—' ? `<div class="tt-row"><span>Ciudad</span><strong>${store.city}</strong></div>` : ''}
     ${excludedNote}
     <div class="tt-excluded" style="color: var(--baseline);">Click para editar</div>
@@ -1918,6 +2044,8 @@ const modalContent = document.getElementById('modal-content');
 function closeModal() {
   modal.classList.remove('visible');
   modalContent.classList.remove('mode-brand', 'mode-dk');
+  document.getElementById('btn-save').style.display = '';
+  document.getElementById('btn-cancel').textContent = 'Cancelar';
   state.modalCtx = null;
 }
 
@@ -1948,6 +2076,14 @@ function openStoreEditModal(store, brand) {
         <label>Take Rate (%)</label>
         <input type="number" id="ms-take" min="0" max="100" step="0.5" placeholder="17" />
       </div>
+      <div class="modal-field">
+        <label>Franchise Fee (MXN/mes)</label>
+        <input type="number" id="ms-ff" min="0" step="1000" placeholder="0" />
+      </div>
+      <div class="modal-field">
+        <label>EBITDA (MXN/mes)</label>
+        <input type="number" id="ms-ebitda" min="0" step="1000" placeholder="0" />
+      </div>
       ${!isBaseline ? `
       <div class="modal-field">
         <label>${isDk ? 'Hub' : 'Ubicación'}</label>
@@ -1959,14 +2095,20 @@ function openStoreEditModal(store, brand) {
       </div>` : ''}
     </div>
     <div class="modal-calc">
-      <span>Rappi Revenue (MXN/mes)</span>
+      <span>Rappi Revenue (TR · MXN/mes)</span>
       <strong id="ms-calc">$0</strong>
+    </div>
+    <div class="modal-calc" style="margin-top:8px;">
+      <span>Otros revenue streams (FF + EBITDA)</span>
+      <strong id="ms-calc-other">$0</strong>
     </div>
   `;
 
   document.getElementById('ms-name').value = store.name;
   document.getElementById('ms-gmv').value = store.gmv_mxn;
   document.getElementById('ms-take').value = store.take_rate_pct;
+  document.getElementById('ms-ff').value = store.franchise_fee_mxn || 0;
+  document.getElementById('ms-ebitda').value = store.ebitda_mxn || 0;
   if (!isBaseline) {
     document.getElementById('ms-loc').value = store.hub_name || '';
     document.getElementById('ms-city').value = store.city || '';
@@ -1975,10 +2117,15 @@ function openStoreEditModal(store, brand) {
   const updateCalc = () => {
     const gmv = parseFloat(document.getElementById('ms-gmv').value) || 0;
     const take = parseFloat(document.getElementById('ms-take').value) || 0;
+    const ff = parseFloat(document.getElementById('ms-ff').value) || 0;
+    const eb = parseFloat(document.getElementById('ms-ebitda').value) || 0;
     document.getElementById('ms-calc').textContent = `$${Math.round(gmv * take / 100).toLocaleString('en-US')}`;
+    document.getElementById('ms-calc-other').textContent = `$${Math.round(ff + eb).toLocaleString('en-US')}`;
   };
   document.getElementById('ms-gmv').addEventListener('input', updateCalc);
   document.getElementById('ms-take').addEventListener('input', updateCalc);
+  document.getElementById('ms-ff').addEventListener('input', updateCalc);
+  document.getElementById('ms-ebitda').addEventListener('input', updateCalc);
   updateCalc();
 
   document.getElementById('btn-delete').style.display = 'block';
@@ -2180,21 +2327,36 @@ function openBrandEditModal(brand) {
 function openDkEditModal(hub) {
   state.modalCtx = { type: 'dk', hubId: hub ? hub.id : null };
   modalContent.classList.remove('mode-brand'); modalContent.classList.add('mode-dk');
+  document.getElementById('btn-save').style.display = '';
+  document.getElementById('btn-cancel').textContent = 'Cancelar';
 
   document.getElementById('modal-header-text').textContent = hub ? 'Editar' : 'Nuevo';
   document.getElementById('modal-slot-label').textContent = hub ? `DK ${hub.name}` : 'Dark Kitchen';
   document.getElementById('modal-context').textContent = hub ? `Editar hub · ID: ${hub.id}` : 'Agregar ubicación de Dark Kitchen';
 
   const body = document.getElementById('modal-body');
+  const ownerOptions = [
+    `<option value="rappi">Rappi</option>`,
+    ...state.data.brands.map(b => `<option value="${b.id}">${b.name}</option>`)
+  ].join('');
   body.innerHTML = `
     <div class="modal-grid">
       <div class="modal-field full">
         <label>Nombre de la ubicación</label>
         <input type="text" id="md-name" placeholder="Ej: Cuajimalpa" />
       </div>
-      <div class="modal-field full">
+      <div class="modal-field">
         <label>Ciudad</label>
         <input type="text" id="md-city" placeholder="CDMX · GDL · MTY · etc" />
+      </div>
+      <div class="modal-field">
+        <label>Owner / fondea capex</label>
+        <select id="md-owner">${ownerOptions}</select>
+      </div>
+      <div class="modal-field full">
+        <label>Capex (USD)</label>
+        <input type="number" id="md-capex" min="0" step="1000" placeholder="0" />
+        <div class="hint">Si owner ≠ Rappi, este capex NO suma al Total Invested</div>
       </div>
     </div>
     ${hub ? `
@@ -2203,18 +2365,137 @@ function openDkEditModal(hub) {
       </div>
     ` : `
       <div class="modal-calc" style="border-left-color: var(--dk);">
-        <span>El hub aparece en el grid cuando tiene al menos un store asignado</span>
+        <span>El hub aparece en el grid cuando tiene al menos un store asignado o si lo marcas "Always show"</span>
       </div>
     `}
   `;
   const nameI = document.getElementById('md-name');
   const cityI = document.getElementById('md-city');
+  const ownerI = document.getElementById('md-owner');
+  const capexI = document.getElementById('md-capex');
   nameI.value = hub ? hub.name : '';
   cityI.value = hub ? hub.city : 'CDMX';
+  ownerI.value = hub ? (hub.owner_id || 'rappi') : 'rappi';
+  capexI.value = hub ? (hub.capex_usd || 0) : 0;
 
   document.getElementById('btn-delete').style.display = hub ? 'block' : 'none';
   modal.classList.add('visible');
   setTimeout(() => nameI.focus(), 50);
+}
+
+// ---- MANAGE DKs MODAL ----
+function openManageDksModal() {
+  state.modalCtx = { type: 'manage-dks' };
+  modalContent.classList.remove('mode-brand');
+  modalContent.classList.add('mode-dk');
+
+  document.getElementById('modal-header-text').textContent = 'Manage';
+  document.getElementById('modal-slot-label').textContent = 'Dark Kitchens';
+  document.getElementById('modal-context').textContent = `${state.data.hubs.length} hubs · toggle visibility, edit o agregar`;
+
+  document.getElementById('btn-delete').style.display = 'none';
+  document.getElementById('btn-save').style.display = 'none';
+  document.getElementById('btn-cancel').textContent = 'Cerrar';
+
+  renderManageDksBody();
+  modal.classList.add('visible');
+}
+
+function renderManageDksBody() {
+  const body = document.getElementById('modal-body');
+  const hubs = state.data.hubs;
+
+  const counts = {};
+  hubs.forEach(h => { counts[h.id] = { stores: 0, projections: 0 }; });
+  state.data.brands.forEach(b => {
+    b.stores.forEach(s => { if (s.hub_id && counts[s.hub_id]) counts[s.hub_id].stores++; });
+    (b.projections || []).forEach(p => {
+      if (p.column && p.column.startsWith('dk-')) {
+        const hid = p.column.slice(3);
+        if (counts[hid]) counts[hid].projections++;
+      }
+    });
+  });
+
+  if (hubs.length === 0) {
+    body.innerHTML = `
+      <div class="dk-manage-empty">No hay DKs todavía. Agregá el primero.</div>
+      <div style="display:flex; justify-content:flex-end; margin-top:12px;">
+        <button class="btn primary" id="dk-manage-add">+ Nuevo DK</button>
+      </div>`;
+    document.getElementById('dk-manage-add').onclick = () => openDkEditModal(null);
+    return;
+  }
+
+  const ownerLabel = (h) => {
+    const id = h.owner_id || 'rappi';
+    if (id === 'rappi') return 'Rappi';
+    const b = state.data.brands.find(x => x.id === id);
+    return b ? b.name : id;
+  };
+  const rows = hubs.map(h => {
+    const c = counts[h.id];
+    const used = c.stores + c.projections > 0;
+    const visible = used || h.alwaysShow;
+    const checked = h.alwaysShow ? 'checked' : '';
+    const disabled = used ? 'disabled title="Ya visible por tener stores/proyecciones"' : '';
+    const oId = h.owner_id || 'rappi';
+    const cap = h.capex_usd || 0;
+    const ownerClass = oId === 'rappi' ? 'rappi' : 'aliado';
+    return `
+      <div class="dk-manage-row ${visible ? '' : 'is-hidden'}" data-hub-id="${h.id}">
+        <div class="dk-info">
+          <span class="dk-name">◆ ${h.name}</span>
+          <span class="dk-meta">${h.city || '—'} · <span class="dk-owner-tag ${ownerClass}">Cap: ${ownerLabel(h)}</span>${cap > 0 ? ` · ${fmtUsd(cap)}` : ''} · ${visible ? 'visible' : 'oculto'}</span>
+        </div>
+        <span class="dk-counts">${c.stores} stores · ${c.projections} planes</span>
+        <label class="dk-toggle">
+          <input type="checkbox" data-action="toggle-show" ${checked} ${disabled} />
+          Always show
+        </label>
+        <button class="icon-btn" data-action="edit" title="Editar">✎</button>
+        <button class="icon-btn danger" data-action="delete" title="Eliminar">×</button>
+      </div>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="dk-manage-list">${rows}</div>
+    <div style="display:flex; justify-content:flex-end; margin-top:14px;">
+      <button class="btn primary" id="dk-manage-add">+ Nuevo DK</button>
+    </div>`;
+
+  body.querySelectorAll('.dk-manage-row').forEach(row => {
+    const hubId = row.dataset.hubId;
+    row.querySelector('[data-action="toggle-show"]').addEventListener('change', (e) => {
+      const hub = state.data.hubs.find(x => x.id === hubId);
+      if (!hub) return;
+      hub.alwaysShow = e.target.checked;
+      saveAll();
+      render();
+      renderManageDksBody();
+    });
+    row.querySelector('[data-action="edit"]').addEventListener('click', () => {
+      const hub = state.data.hubs.find(x => x.id === hubId);
+      if (hub) openDkEditModal(hub);
+    });
+    row.querySelector('[data-action="delete"]').addEventListener('click', () => {
+      const hub = state.data.hubs.find(x => x.id === hubId);
+      if (!hub) return;
+      if (!confirm(`¿Eliminar DK "${hub.name}"? Se borrarán todos los stores y proyecciones en este hub across todas las brands.`)) return;
+      state.data.hubs = state.data.hubs.filter(h => h.id !== hubId);
+      state.data.brands.forEach(b => {
+        b.stores = b.stores.filter(s => s.hub_id !== hubId);
+        b.projections = (b.projections || []).filter(p => p.column !== `dk-${hubId}`);
+      });
+      toast(`DK "${hub.name}" eliminado`, 'warn');
+      saveAll();
+      render();
+      document.getElementById('modal-context').textContent = `${state.data.hubs.length} hubs · toggle visibility, edit o agregar`;
+      renderManageDksBody();
+    });
+  });
+
+  document.getElementById('dk-manage-add').onclick = () => openDkEditModal(null);
 }
 
 // ---- SAVE HANDLER ----
@@ -2225,6 +2506,8 @@ document.getElementById('btn-save').addEventListener('click', () => {
     const name = document.getElementById('ms-name').value.trim();
     const gmv = parseFloat(document.getElementById('ms-gmv').value) || 0;
     const take = parseFloat(document.getElementById('ms-take').value) || 0;
+    const ff = parseFloat(document.getElementById('ms-ff').value) || 0;
+    const eb = parseFloat(document.getElementById('ms-ebitda').value) || 0;
     if (!name) { alert('Dale un nombre'); return; }
     if (gmv <= 0) { alert('GMV debe ser > 0'); return; }
     const brand = state.data.brands.find(b => b.id === ctx.brandId);
@@ -2233,6 +2516,8 @@ document.getElementById('btn-save').addEventListener('click', () => {
       store.name = name;
       store.gmv_mxn = gmv;
       store.take_rate_pct = take;
+      store.franchise_fee_mxn = ff;
+      store.ebitda_mxn = eb;
       if (store.type !== 'baseline') {
         const locEl = document.getElementById('ms-loc');
         const cityEl = document.getElementById('ms-city');
@@ -2328,7 +2613,8 @@ document.getElementById('btn-save').addEventListener('click', () => {
         else b.stores.push({
           id: `${b.id}-baseline`, name: `${name} Baseline`, type: 'baseline',
           slot: null, hub_id: null, hub_name: 'Baseline', city: '—',
-          gmv_mxn: base, take_rate_pct: 17
+          gmv_mxn: base, take_rate_pct: 17,
+          franchise_fee_mxn: 0, ebitda_mxn: 0
         });
       } else if (baseStore) {
         b.stores = b.stores.filter(s => s.type !== 'baseline');
@@ -2348,7 +2634,8 @@ document.getElementById('btn-save').addEventListener('click', () => {
         newBrand.stores.push({
           id: `${newId}-baseline`, name: `${name} Baseline`, type: 'baseline',
           slot: null, hub_id: null, hub_name: 'Baseline', city: '—',
-          gmv_mxn: base, take_rate_pct: 17
+          gmv_mxn: base, take_rate_pct: 17,
+          franchise_fee_mxn: 0, ebitda_mxn: 0
         });
       }
       state.data.brands.push(newBrand);
@@ -2360,18 +2647,21 @@ document.getElementById('btn-save').addEventListener('click', () => {
   else if (ctx.type === 'dk') {
     const name = document.getElementById('md-name').value.trim();
     const city = document.getElementById('md-city').value.trim() || 'CDMX';
+    const owner = document.getElementById('md-owner').value || 'rappi';
+    const capex = parseFloat(document.getElementById('md-capex').value) || 0;
     if (!name) { alert('Dale un nombre'); return; }
 
     if (ctx.hubId) {
       const h = state.data.hubs.find(x => x.id === ctx.hubId);
       h.name = name; h.city = city;
+      h.owner_id = owner; h.capex_usd = capex;
     } else {
       const newId = 'dk-' + slugify(name);
       if (state.data.hubs.some(x => x.id === newId)) {
         alert(`Ya existe un DK con ID "${newId}". Usa otro nombre.`); return;
       }
-      state.data.hubs.push({ id: newId, name, city });
-      toast(`DK "${name}" agregado (aparecerá al tener primer store)`, 'ok');
+      state.data.hubs.push({ id: newId, name, city, owner_id: owner, capex_usd: capex });
+      toast(`DK "${name}" agregado`, 'ok');
     }
     saveAll(); closeModal(); render();
   }
@@ -2480,6 +2770,7 @@ document.getElementById('clear-projections').addEventListener('click', () => {
   saveAll(); render();
 });
 document.getElementById('btn-add-brand').addEventListener('click', () => openBrandEditModal(null));
+document.getElementById('btn-manage-dks').addEventListener('click', openManageDksModal);
 document.getElementById('btn-sync').addEventListener('click', syncToSheets);
 document.getElementById('btn-load').addEventListener('click', loadFromSheets);
 
