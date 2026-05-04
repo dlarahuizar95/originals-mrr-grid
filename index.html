@@ -2225,6 +2225,14 @@ function openAddBlockModal(brandId, colKey, colLabel, kind, meta) {
         <label>Take Rate (%)</label>
         <input type="number" id="ab-take" min="0" max="100" step="0.5" value="${defaultTake}" />
       </div>
+      <div class="modal-field ab-actual-only">
+        <label>Franchise Fee (MXN/mes)</label>
+        <input type="number" id="ab-ff" min="0" step="1000" placeholder="0" value="0" />
+      </div>
+      <div class="modal-field ab-actual-only">
+        <label>EBITDA (MXN/mes)</label>
+        <input type="number" id="ab-ebitda" min="0" step="1000" placeholder="0" value="0" />
+      </div>
       ${kind === 'bm' ? `
       <div class="modal-field">
         <label>Ubicación</label>
@@ -2240,29 +2248,44 @@ function openAddBlockModal(brandId, colKey, colLabel, kind, meta) {
       </div>
     </div>
     <div class="modal-calc">
-      <span>Rappi Revenue (MXN/mes)</span>
+      <span>Rappi Revenue (TR · MXN/mes)</span>
       <strong id="ab-calc">$0</strong>
+    </div>
+    <div class="modal-calc ab-actual-only" style="margin-top:8px;">
+      <span>Otros revenue streams (FF + EBITDA)</span>
+      <strong id="ab-calc-other">$0</strong>
     </div>
   `;
 
   const nameI = document.getElementById('ab-name');
   const gmvI = document.getElementById('ab-gmv');
   const takeI = document.getElementById('ab-take');
+  const ffI = document.getElementById('ab-ff');
+  const ebitdaI = document.getElementById('ab-ebitda');
   const dateWrap = document.getElementById('ab-date-wrap');
+  const actualOnly = body.querySelectorAll('.ab-actual-only');
 
   document.querySelectorAll('input[name="ab-mode"]').forEach(r => {
     r.addEventListener('change', () => {
-      dateWrap.style.display = r.value === 'planned' ? '' : 'none';
+      const planned = r.value === 'planned';
+      if (!r.checked) return;
+      dateWrap.style.display = planned ? '' : 'none';
+      actualOnly.forEach(el => { el.style.display = planned ? 'none' : ''; });
     });
   });
 
   const updateCalc = () => {
     const gmv = parseFloat(gmvI.value) || 0;
     const take = parseFloat(takeI.value) || 0;
+    const ff = parseFloat(ffI.value) || 0;
+    const eb = parseFloat(ebitdaI.value) || 0;
     document.getElementById('ab-calc').textContent = `$${Math.round(gmv * take / 100).toLocaleString('en-US')}`;
+    document.getElementById('ab-calc-other').textContent = `$${Math.round(ff + eb).toLocaleString('en-US')}`;
   };
   gmvI.addEventListener('input', updateCalc);
   takeI.addEventListener('input', updateCalc);
+  ffI.addEventListener('input', updateCalc);
+  ebitdaI.addEventListener('input', updateCalc);
   updateCalc();
 
   document.getElementById('btn-delete').style.display = 'none';
@@ -2535,6 +2558,8 @@ document.getElementById('btn-save').addEventListener('click', () => {
     const name = document.getElementById('ab-name').value.trim();
     const gmv = parseFloat(document.getElementById('ab-gmv').value) || 0;
     const take = parseFloat(document.getElementById('ab-take').value) || (ctx.kind === 'dk' ? 22 : 17);
+    const ff = parseFloat(document.getElementById('ab-ff').value) || 0;
+    const ebitda = parseFloat(document.getElementById('ab-ebitda').value) || 0;
     const mode = document.querySelector('input[name="ab-mode"]:checked').value;
     if (!name) { alert('Dale un nombre'); return; }
     if (gmv <= 0) { alert('GMV debe ser > 0'); return; }
@@ -2549,6 +2574,8 @@ document.getElementById('btn-save').addEventListener('click', () => {
         type: ctx.kind,
         gmv_mxn: gmv,
         take_rate_pct: take,
+        franchise_fee_mxn: ff,
+        ebitda_mxn: ebitda,
         slot: ctx.kind === 'bm' ? ctx.meta.slot : null,
         hub_id: ctx.kind === 'dk' ? ctx.meta.hubId : null,
         hub_name: ctx.kind === 'dk' ? ctx.meta.hubName : (locEl ? locEl.value.trim() || '—' : '—'),
