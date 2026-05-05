@@ -1111,7 +1111,7 @@ function seedData() {
       stores, projections: []
     };
   });
-  const hubs = DK_HUBS_SEED.map(h => ({ ...h, owner_id: 'rappi', capex_usd: 0 }));
+  const hubs = DK_HUBS_SEED.map(h => ({ ...h, builder: 'Rappi', operator: 'Rappi', capex_usd: 0 }));
   return { hubs, brands };
 }
 
@@ -1146,7 +1146,8 @@ async function saveToSupabase() {
     if (hubs.length) {
       const fullHubs = hubs.map(h => ({
         id: h.id, name: h.name, city: h.city,
-        owner_id: h.owner_id || 'rappi',
+        builder: h.builder || 'Rappi',
+        operator: h.operator || 'Rappi',
         capex_usd: h.capex_usd || 0,
         always_show: !!h.alwaysShow
       }));
@@ -1154,7 +1155,7 @@ async function saveToSupabase() {
       if (error) {
         const fallback = hubs.map(h => ({ id: h.id, name: h.name, city: h.city }));
         await sb.from('hubs').upsert(fallback, { onConflict: 'id' });
-        console.warn('Supabase: hubs.owner_id / capex_usd / always_show columns missing — synced without them. Add the columns to persist.');
+        console.warn('Supabase: hubs.builder / operator / capex_usd / always_show columns missing — synced without them. Add the columns to persist.');
       }
     }
 
@@ -1235,7 +1236,8 @@ async function loadFromSupabase() {
 
     const hubs = (hubsRes.data || []).map(h => ({
       id: h.id, name: h.name, city: h.city,
-      owner_id: h.owner_id || 'rappi',
+      builder: h.builder || 'Rappi',
+      operator: h.operator || 'Rappi',
       capex_usd: Number(h.capex_usd) || 0,
       alwaysShow: !!h.always_show
     }));
@@ -1500,7 +1502,7 @@ function render() {
   const projectedAll = brandTotals.reduce((s,b) => s + b.projTotal, 0);
   const projectedCount = brandTotals.reduce((s,b) => s + (b.projections || []).length, 0);
   const brandsInvestedUsd = brandTotals.reduce((s,b) => s + (b.investmentUsd || 0), 0);
-  const rappiHubsCapexUsd = hubs.reduce((s,h) => s + ((h.owner_id || 'rappi') === 'rappi' ? (h.capex_usd || 0) : 0), 0);
+  const rappiHubsCapexUsd = hubs.reduce((s,h) => s + ((h.builder || 'Rappi').trim().toLowerCase() === 'rappi' ? (h.capex_usd || 0) : 0), 0);
   const totalInvestedUsd = brandsInvestedUsd + rappiHubsCapexUsd;
 
   // Time-windowed projections
@@ -1660,14 +1662,14 @@ function render() {
   visibleHubs.forEach((hub, idx) => {
     const hubData = hubTotals[idx];
     const head = document.createElement('div');
-    const ownerId = hub.owner_id || 'rappi';
-    const isAliado = ownerId !== 'rappi';
-    const ownerName = isAliado ? (state.data.brands.find(b => b.id === ownerId)?.name || ownerId) : 'Rappi';
-    head.className = 'col-header type-dk' + (idx === 0 ? ' type-dk-group-start' : '') + (isAliado ? ' type-dk-aliado' : '');
+    const builder = (hub.builder || 'Rappi').trim();
+    const operator = (hub.operator || 'Rappi').trim();
+    const isAliadoBuilder = builder.toLowerCase() !== 'rappi';
+    head.className = 'col-header type-dk' + (idx === 0 ? ' type-dk-group-start' : '') + (isAliadoBuilder ? ' type-dk-aliado' : '');
     head.innerHTML = `
       <span class="col-title">◆ DK ${String(idx+1).padStart(2,'0')}</span>
       <span class="col-sub">${hub.name} · ${hub.city}</span>
-      <span class="col-cap-tag ${isAliado ? 'aliado' : 'rappi'}">Cap: ${ownerName}</span>
+      <span class="col-cap-tag ${isAliadoBuilder ? 'aliado' : 'rappi'}">Built: ${builder} · Op: ${operator}</span>
       <span class="col-total">${fmtCcyNoSuffix(hubData.totalActual)}</span>
       ${hubData.totalProjected > 0 ? `<span class="projected-mini">+${fmtCcyNoSuffix(hubData.totalProjected)}</span>` : ''}
       <span class="col-edit-hint">✎</span>
@@ -2358,10 +2360,6 @@ function openDkEditModal(hub) {
   document.getElementById('modal-context').textContent = hub ? `Editar hub · ID: ${hub.id}` : 'Agregar ubicación de Dark Kitchen';
 
   const body = document.getElementById('modal-body');
-  const ownerOptions = [
-    `<option value="rappi">Rappi</option>`,
-    ...state.data.brands.map(b => `<option value="${b.id}">${b.name}</option>`)
-  ].join('');
   body.innerHTML = `
     <div class="modal-grid">
       <div class="modal-field full">
@@ -2373,13 +2371,19 @@ function openDkEditModal(hub) {
         <input type="text" id="md-city" placeholder="CDMX · GDL · MTY · etc" />
       </div>
       <div class="modal-field">
-        <label>Owner / fondea capex</label>
-        <select id="md-owner">${ownerOptions}</select>
-      </div>
-      <div class="modal-field full">
         <label>Capex (USD)</label>
         <input type="number" id="md-capex" min="0" step="1000" placeholder="0" />
-        <div class="hint">Si owner ≠ Rappi, este capex NO suma al Total Invested</div>
+      </div>
+      <div class="modal-field">
+        <label>Constructor (paga capex)</label>
+        <input type="text" id="md-builder" placeholder="Rappi" />
+      </div>
+      <div class="modal-field">
+        <label>Operador</label>
+        <input type="text" id="md-operator" placeholder="Rappi" />
+      </div>
+      <div class="modal-field full">
+        <div class="hint">Si Constructor = "Rappi", el capex suma al Total Invested. Cualquier otro nombre se considera aliado.</div>
       </div>
     </div>
     ${hub ? `
@@ -2394,12 +2398,14 @@ function openDkEditModal(hub) {
   `;
   const nameI = document.getElementById('md-name');
   const cityI = document.getElementById('md-city');
-  const ownerI = document.getElementById('md-owner');
   const capexI = document.getElementById('md-capex');
+  const builderI = document.getElementById('md-builder');
+  const operatorI = document.getElementById('md-operator');
   nameI.value = hub ? hub.name : '';
   cityI.value = hub ? hub.city : 'CDMX';
-  ownerI.value = hub ? (hub.owner_id || 'rappi') : 'rappi';
   capexI.value = hub ? (hub.capex_usd || 0) : 0;
+  builderI.value = hub ? (hub.builder || 'Rappi') : 'Rappi';
+  operatorI.value = hub ? (hub.operator || 'Rappi') : 'Rappi';
 
   document.getElementById('btn-delete').style.display = hub ? 'block' : 'none';
   modal.classList.add('visible');
@@ -2450,26 +2456,22 @@ function renderManageDksBody() {
     return;
   }
 
-  const ownerLabel = (h) => {
-    const id = h.owner_id || 'rappi';
-    if (id === 'rappi') return 'Rappi';
-    const b = state.data.brands.find(x => x.id === id);
-    return b ? b.name : id;
-  };
   const rows = hubs.map(h => {
     const c = counts[h.id];
     const used = c.stores + c.projections > 0;
     const visible = used || h.alwaysShow;
     const checked = h.alwaysShow ? 'checked' : '';
     const disabled = used ? 'disabled title="Ya visible por tener stores/proyecciones"' : '';
-    const oId = h.owner_id || 'rappi';
+    const builder = (h.builder || 'Rappi').trim();
+    const operator = (h.operator || 'Rappi').trim();
+    const isAliadoBuilder = builder.toLowerCase() !== 'rappi';
     const cap = h.capex_usd || 0;
-    const ownerClass = oId === 'rappi' ? 'rappi' : 'aliado';
+    const ownerClass = isAliadoBuilder ? 'aliado' : 'rappi';
     return `
       <div class="dk-manage-row ${visible ? '' : 'is-hidden'}" data-hub-id="${h.id}">
         <div class="dk-info">
           <span class="dk-name">◆ ${h.name}</span>
-          <span class="dk-meta">${h.city || '—'} · <span class="dk-owner-tag ${ownerClass}">Cap: ${ownerLabel(h)}</span>${cap > 0 ? ` · ${fmtUsd(cap)}` : ''} · ${visible ? 'visible' : 'oculto'}</span>
+          <span class="dk-meta">${h.city || '—'} · <span class="dk-owner-tag ${ownerClass}">Built: ${builder} · Op: ${operator}</span>${cap > 0 ? ` · ${fmtUsd(cap)}` : ''} · ${visible ? 'visible' : 'oculto'}</span>
         </div>
         <span class="dk-counts">${c.stores} stores · ${c.projections} planes</span>
         <label class="dk-toggle">
@@ -2674,20 +2676,21 @@ document.getElementById('btn-save').addEventListener('click', () => {
   else if (ctx.type === 'dk') {
     const name = document.getElementById('md-name').value.trim();
     const city = document.getElementById('md-city').value.trim() || 'CDMX';
-    const owner = document.getElementById('md-owner').value || 'rappi';
+    const builder = document.getElementById('md-builder').value.trim() || 'Rappi';
+    const operator = document.getElementById('md-operator').value.trim() || 'Rappi';
     const capex = parseFloat(document.getElementById('md-capex').value) || 0;
     if (!name) { alert('Dale un nombre'); return; }
 
     if (ctx.hubId) {
       const h = state.data.hubs.find(x => x.id === ctx.hubId);
       h.name = name; h.city = city;
-      h.owner_id = owner; h.capex_usd = capex;
+      h.builder = builder; h.operator = operator; h.capex_usd = capex;
     } else {
       const newId = 'dk-' + slugify(name);
       if (state.data.hubs.some(x => x.id === newId)) {
         alert(`Ya existe un DK con ID "${newId}". Usa otro nombre.`); return;
       }
-      state.data.hubs.push({ id: newId, name, city, owner_id: owner, capex_usd: capex });
+      state.data.hubs.push({ id: newId, name, city, builder, operator, capex_usd: capex });
       toast(`DK "${name}" agregado`, 'ok');
     }
     saveAll(); closeModal(); render();
