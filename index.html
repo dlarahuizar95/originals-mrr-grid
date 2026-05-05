@@ -1222,7 +1222,7 @@ async function loadFromSupabase() {
       sheetsUrl: settRes.data.sheets_url || ''
     } : null;
 
-    return { data: { hubs, brands }, settings };
+    return { data: { hubs, brands }, goals, settings };
   } catch(e) {
     console.error('Supabase load failed', e);
     return null;
