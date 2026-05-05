@@ -803,34 +803,18 @@
       <button class="load-btn" id="btn-load">↓ Load from Sheets</button>
       <span class="sync-status" id="sync-status">Not connected</span>
     </div>
-    <div class="toolbar-group">
-      <label>Currency</label>
-      <div class="ccy-toggle">
-        <button class="ccy-btn active" data-ccy="usd">USD</button>
-        <button class="ccy-btn" data-ccy="mxn">MXN</button>
-      </div>
-      <label style="margin-left:10px;">FX</label>
-      <span style="color: var(--muted);">1 USD =</span>
-      <input type="number" id="fx-input" value="20.00" step="0.10" min="1" max="100" style="width:70px;" />
-      <span style="color: var(--muted);">MXN</span>
-    </div>
-  </div>
-
-  <div class="view-mode-bar">
-    <button class="view-mode-btn active" id="mode-actual">◉ Actual</button>
-    <button class="view-mode-btn planned" id="mode-planned">✦ Actual + Planeado</button>
   </div>
 
   <section class="goal-banner" id="goal-banner">
     <div class="goal-stat">
-      <div class="label" id="kpi-current-label">MRR Actual</div>
+      <div class="label" id="kpi-current-label">MRR Forecast</div>
       <div class="value primary" id="kpi-current">$0.0M</div>
-      <div class="sub" id="kpi-current-sub">— MXN</div>
+      <div class="sub" id="kpi-current-sub">USD</div>
     </div>
     <div class="goal-stat">
-      <div class="label">Meta · Feb 2027</div>
-      <div class="value" id="kpi-goal">$20.0M</div>
-      <div class="sub">10 meses para meta</div>
+      <div class="label" id="kpi-goal-label">Meta</div>
+      <div class="value" id="kpi-goal">$1.2M</div>
+      <div class="sub" id="kpi-goal-sub">USD</div>
     </div>
     <div class="goal-stat">
       <div class="label" id="kpi-gap-label">Gap a Meta</div>
@@ -852,15 +836,13 @@
       <div class="progress-track">
         <div class="progress-fill baseline" id="progress-baseline" style="width: 0%"></div>
         <div class="progress-fill growth" id="progress-growth" style="width: 0%"></div>
-        <div class="progress-fill projected" id="progress-projected" style="width: 0%"></div>
       </div>
       <div class="progress-markers">
-        <span>$0</span><span>25%</span><span>50%</span><span>75%</span><span>$20M · FEB '27</span>
+        <span>$0</span><span>25%</span><span>50%</span><span>75%</span><span id="progress-marker-end">Meta</span>
       </div>
       <div class="progress-legend">
         <span><span class="swatch" style="background: var(--baseline);"></span>Baseline firmada</span>
-        <span><span class="swatch" style="background: var(--accent);"></span>Growth actual</span>
-        <span><span class="swatch projected"></span>Pipeline planeado</span>
+        <span><span class="swatch" style="background: var(--accent);"></span>Growth forecast</span>
       </div>
     </div>
   </section>
@@ -872,12 +854,6 @@
     <span class="incremental"><span style="color: var(--muted);">Growth incremental</span> · <strong id="bs-growth">$0.0M</strong></span>
   </section>
 
-  <section class="pipeline-strip" id="pipeline-strip" style="display: none;">
-    <span><span style="color: var(--muted);">Pipeline</span> · <strong id="pp-total">$0.0M</strong> <span id="pp-count" class="hint">(0)</span></span>
-    <span><span style="color: var(--muted);">Próximos 3m</span> · <strong id="pp-3m">$0.0M</strong></span>
-    <span><span style="color: var(--muted);">Hasta Feb 2027</span> · <strong id="pp-feb">$0.0M</strong></span>
-    <span><span style="color: var(--muted);">Gap post-pipeline</span> · <strong id="pp-gap" style="color: var(--accent);">$0.0M</strong></span>
-  </section>
 
   <section class="controls">
     <div style="display: flex; gap: 20px; flex-wrap: wrap;">
@@ -891,7 +867,6 @@
         <span class="filter-label">Ordenar</span>
         <button class="chip active" data-sort="mrr">MRR</button>
         <button class="chip" data-sort="multiple">Multiple</button>
-        <button class="chip" data-sort="projected">Pipeline</button>
         <button class="chip" data-sort="invested">Invested</button>
         <button class="chip" data-sort="name">A–Z</button>
       </div>
@@ -903,7 +878,7 @@
       <div class="filter-group">
         <button class="chip primary" id="btn-add-brand">+ Brand</button>
         <button class="chip" id="btn-manage-dks">◆ Manage DKs</button>
-        <button class="chip danger" id="clear-projections">Borrar planes</button>
+        <button class="chip" id="btn-manage-goals">◎ Metas</button>
       </div>
     </div>
   </section>
@@ -929,11 +904,6 @@
       <div class="breakdown" id="foot-growth-bd">B&amp;M + DK</div>
     </div>
     <div class="summary-stat">
-      <div class="label">Pipeline</div>
-      <div class="value projected-color" id="foot-projected">$0.0M</div>
-      <div class="breakdown" id="foot-projected-bd">0 ubicaciones</div>
-    </div>
-    <div class="summary-stat">
       <div class="label">Total Invested</div>
       <div class="value investment-color" id="foot-invested">$0</div>
       <div class="breakdown" id="foot-invested-bd">Year-1 USD</div>
@@ -947,7 +917,7 @@
 
   <div class="footnote">
     <span>Rappi Originals · SP&amp;A México · Confidential</span>
-    <span>Investment USD · MRR en moneda seleccionada · <span class="storage-indicator">localStorage + Sheets backup</span></span>
+    <span>Todo en USD · Forecast · <span class="storage-indicator">localStorage + Supabase</span></span>
   </div>
 
 </div>
@@ -976,11 +946,10 @@
    Full CRUD: brands, DKs, B&M slots · Sheets sync · localStorage-first
    ================================================================== */
 
-const GOAL_MRR_MXN = 20_000_000;
-const TARGET_DATE = new Date('2027-02-28');
-const CURRENT_DATE = new Date('2026-04-16');
+const GOAL_MRR_USD_FALLBACK = 1_200_000;
+const CURRENT_DATE = new Date('2026-05-05');
 const MIN_BM_SLOTS = 10;
-const STORAGE_KEY = 'rappi-originals-state-v6';
+const STORAGE_KEY = 'rappi-originals-state-v7';
 
 const DK_HUBS_SEED = [
   { id: 'dk-polanco',    name: 'Polanco',     city: 'CDMX' },
@@ -1070,29 +1039,29 @@ const BRAND_SEED = [
      hubs: [{ id, name, city }],
      brands: [{
        id, name, operator, investmentUsd, baseline, baselineSigned, maxSlots,
-       stores: [{ id, type, slot?, hub_id?, gmv_mxn, take_rate_pct, hub_name, city, name }],
-       projections: [{ id, column, name, gmv_mxn, take_rate_pct, open_date }]
+       stores: [{ id, type, slot?, hub_id?, gmv_usd, take_rate_pct, hub_name, city, name, franchise_fee_usd, ebitda_usd, open_date? }]
      }]
-   }
 -------------------------------------------*/
 
 function seedData() {
   const brands = BRAND_SEED.map(cfg => {
+    const SEED_FX = 17.5;
+    const baselineUsd = Math.round((cfg.baseline || 0) / SEED_FX);
     const stores = [];
-    if (cfg.baseline > 0) {
+    if (baselineUsd > 0) {
       stores.push({
         id: `${cfg.id}-baseline`, name: `${cfg.name} Baseline`, type: 'baseline',
         slot: null, hub_id: null, hub_name: 'Baseline', city: '—',
-        gmv_mxn: cfg.baseline, take_rate_pct: 17,
-        franchise_fee_mxn: 0, ebitda_mxn: 0
+        gmv_usd: baselineUsd, take_rate_pct: 17,
+        franchise_fee_usd: 0, ebitda_usd: 0
       });
     }
     cfg.bmStores.forEach(bm => {
       stores.push({
         id: `${cfg.id}-bm-${bm.slot}`, name: `${cfg.name} ${bm.loc}`, type: 'bm',
         slot: bm.slot, hub_id: null, hub_name: bm.loc, city: 'CDMX',
-        gmv_mxn: bm.gmv, take_rate_pct: 16,
-        franchise_fee_mxn: 0, ebitda_mxn: 0
+        gmv_usd: Math.round(bm.gmv / SEED_FX), take_rate_pct: 16,
+        franchise_fee_usd: 0, ebitda_usd: 0
       });
     });
     cfg.dkStores.forEach(dk => {
@@ -1100,15 +1069,15 @@ function seedData() {
       stores.push({
         id: `${cfg.id}-${dk.hubId}`, name: `${cfg.name} · DK ${hub.name}`, type: 'dk',
         slot: null, hub_id: dk.hubId, hub_name: hub.name, city: hub.city,
-        gmv_mxn: dk.gmv, take_rate_pct: 23,
-        franchise_fee_mxn: 0, ebitda_mxn: 0
+        gmv_usd: Math.round(dk.gmv / SEED_FX), take_rate_pct: 23,
+        franchise_fee_usd: 0, ebitda_usd: 0
       });
     });
     return {
       id: cfg.id, name: cfg.name, operator: cfg.operator,
-      investmentUsd: cfg.investmentUsd, baseline: cfg.baseline,
+      investmentUsd: cfg.investmentUsd, baseline: baselineUsd,
       baselineSigned: cfg.baselineSigned, maxSlots: cfg.maxSlots,
-      stores, projections: []
+      stores
     };
   });
   const hubs = DK_HUBS_SEED.map(h => ({ ...h, builder: 'Rappi', operator: 'Rappi', capex_usd: 0 }));
@@ -1124,16 +1093,15 @@ let _saveTimer = null;
 
 // ---------- PERSISTENCE ----------
 function saveAll() {
-  // Save to localStorage immediately (fast cache)
   try {
     const payload = {
       data: state.data,
-      settings: { fx: state.fx, currency: state.currency, sheetsUrl: state.sheetsUrl, viewMode: state.viewMode }
+      goals: state.goals,
+      settings: { sheetsUrl: state.sheetsUrl }
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   } catch(e) { console.error('Local save failed', e); }
 
-  // Debounced save to Supabase (500ms)
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(() => saveToSupabase(), 500);
 }
@@ -1159,49 +1127,27 @@ async function saveToSupabase() {
       }
     }
 
-    // Upsert brands, stores, projections
     for (const b of brands) {
       await sb.from('brands').upsert({
         id: b.id, name: b.name, operator: b.operator,
-        investment_usd: b.investmentUsd, baseline: b.baseline,
+        investment_usd: b.investmentUsd, baseline_usd: b.baseline,
         baseline_signed: b.baselineSigned, max_slots: b.maxSlots
       }, { onConflict: 'id' });
 
-      // Replace stores for this brand
       await sb.from('stores').delete().eq('brand_id', b.id);
       if (b.stores.length) {
-        const fullPayload = b.stores.map(s => ({
+        await sb.from('stores').insert(b.stores.map(s => ({
           id: s.id, brand_id: b.id, name: s.name, type: s.type,
           slot: s.slot, hub_id: s.hub_id, hub_name: s.hub_name,
-          city: s.city, gmv_mxn: s.gmv_mxn, take_rate_pct: s.take_rate_pct,
-          franchise_fee_mxn: s.franchise_fee_mxn || 0,
-          ebitda_mxn: s.ebitda_mxn || 0
-        }));
-        const { error } = await sb.from('stores').insert(fullPayload);
-        if (error) {
-          // Fallback: schema may not yet have franchise_fee_mxn / ebitda_mxn columns
-          const fallback = b.stores.map(s => ({
-            id: s.id, brand_id: b.id, name: s.name, type: s.type,
-            slot: s.slot, hub_id: s.hub_id, hub_name: s.hub_name,
-            city: s.city, gmv_mxn: s.gmv_mxn, take_rate_pct: s.take_rate_pct
-          }));
-          await sb.from('stores').insert(fallback);
-          console.warn('Supabase: stores.franchise_fee_mxn / stores.ebitda_mxn columns missing — synced without them. Add the columns to persist fees.');
-        }
-      }
-
-      // Replace projections for this brand
-      await sb.from('projections').delete().eq('brand_id', b.id);
-      if ((b.projections || []).length) {
-        await sb.from('projections').insert(b.projections.map(p => ({
-          id: p.id, brand_id: b.id, column_type: p.column,
-          name: p.name, gmv_mxn: p.gmv_mxn,
-          take_rate_pct: p.take_rate_pct, open_date: p.open_date || null
+          city: s.city,
+          gmv_usd: s.gmv_usd, take_rate_pct: s.take_rate_pct,
+          franchise_fee_usd: s.franchise_fee_usd || 0,
+          ebitda_usd: s.ebitda_usd || 0,
+          open_date: s.open_date || null
         })));
       }
     }
 
-    // Delete brands in DB that no longer exist locally
     const localIds = brands.map(b => b.id);
     const { data: dbBrands } = await sb.from('brands').select('id');
     if (dbBrands) {
@@ -1209,10 +1155,17 @@ async function saveToSupabase() {
       if (toDelete.length) await sb.from('brands').delete().in('id', toDelete);
     }
 
-    // Save settings
+    if (state.goals && state.goals.length) {
+      await sb.from('goals').upsert(state.goals.map(g => ({
+        id: g.id, name: g.name, metric: g.metric,
+        target_value: g.target_value, target_date: g.target_date,
+        owner: g.owner || '', status: g.status || 'on-track',
+        notes: g.notes || '', sort_order: g.sort_order || 0
+      })), { onConflict: 'id' });
+    }
+
     await sb.from('settings').upsert({
-      id: 1, fx: state.fx, currency: state.currency,
-      sheets_url: state.sheetsUrl, view_mode: state.viewMode,
+      id: 1, sheets_url: state.sheetsUrl,
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
 
@@ -1224,11 +1177,11 @@ async function saveToSupabase() {
 
 async function loadFromSupabase() {
   try {
-    const [hubsRes, brandsRes, storesRes, projRes, settRes] = await Promise.all([
+    const [hubsRes, brandsRes, storesRes, goalsRes, settRes] = await Promise.all([
       sb.from('hubs').select('*'),
       sb.from('brands').select('*'),
       sb.from('stores').select('*'),
-      sb.from('projections').select('*'),
+      sb.from('goals').select('*').order('sort_order', { ascending: true }),
       sb.from('settings').select('*').eq('id', 1).single()
     ]);
 
@@ -1244,26 +1197,29 @@ async function loadFromSupabase() {
     const brands = (brandsRes.data || []).map(b => ({
       id: b.id, name: b.name, operator: b.operator,
       investmentUsd: Number(b.investment_usd) || 0,
-      baseline: Number(b.baseline) || 0,
+      baseline: Number(b.baseline_usd) || 0,
       baselineSigned: b.baseline_signed,
       maxSlots: b.max_slots || 10,
       stores: (storesRes.data || []).filter(s => s.brand_id === b.id).map(s => ({
         id: s.id, name: s.name, type: s.type, slot: s.slot,
         hub_id: s.hub_id, hub_name: s.hub_name, city: s.city,
-        gmv_mxn: Number(s.gmv_mxn) || 0, take_rate_pct: Number(s.take_rate_pct) || 0,
-        franchise_fee_mxn: Number(s.franchise_fee_mxn) || 0,
-        ebitda_mxn: Number(s.ebitda_mxn) || 0
-      })),
-      projections: (projRes.data || []).filter(p => p.brand_id === b.id).map(p => ({
-        id: p.id, column: p.column_type, name: p.name,
-        gmv_mxn: Number(p.gmv_mxn) || 0, take_rate_pct: Number(p.take_rate_pct) || 0,
-        open_date: p.open_date
+        gmv_usd: Number(s.gmv_usd) || 0, take_rate_pct: Number(s.take_rate_pct) || 0,
+        franchise_fee_usd: Number(s.franchise_fee_usd) || 0,
+        ebitda_usd: Number(s.ebitda_usd) || 0,
+        open_date: s.open_date || null
       }))
     }));
 
+    const goals = (goalsRes.data || []).map(g => ({
+      id: g.id, name: g.name, metric: g.metric,
+      target_value: Number(g.target_value) || 0,
+      target_date: g.target_date,
+      owner: g.owner || '', status: g.status || 'on-track',
+      notes: g.notes || '', sort_order: g.sort_order || 0
+    }));
+
     const settings = settRes.data ? {
-      fx: Number(settRes.data.fx) || 20, currency: settRes.data.currency || 'usd',
-      sheetsUrl: settRes.data.sheets_url || '', viewMode: settRes.data.view_mode || 'actual'
+      sheetsUrl: settRes.data.sheets_url || ''
     } : null;
 
     return { data: { hubs, brands }, settings };
@@ -1357,7 +1313,7 @@ const fmtSmart = v => {
   return `$${Math.round(v)}`;
 };
 const fmtUsd = v => fmtSmart(v);
-const fmtCcyNoSuffix = mxn => fmtSmart(state.currency === 'usd' ? mxn / state.fx : mxn);
+const fmtCcyNoSuffix = v => fmtSmart(v);
 const fmtPct = v => `${v.toFixed(1)}%`;
 const slugify = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || `item-${Date.now()}`;
 function tierForGmv(gmv, allGmvs) {
@@ -1372,9 +1328,9 @@ function tierForGmv(gmv, allGmvs) {
 function monthsBetween(d1, d2) {
   return (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
 }
-function computeMultiple(mrrMxn, investmentUsd) {
+function computeMultiple(mrrUsd, investmentUsd) {
   if (!investmentUsd || investmentUsd <= 0) return null;
-  return (mrrMxn / state.fx) / investmentUsd;
+  return mrrUsd / investmentUsd;
 }
 function tierForMultiple(m) {
   if (m === null || m === undefined) return 'null';
@@ -1382,9 +1338,9 @@ function tierForMultiple(m) {
   if (m >= 0.04) return 'mid';
   return 'low';
 }
-function computePaybackMonths(mrrMxn, investmentUsd, blendedTakePct) {
-  if (!investmentUsd || investmentUsd <= 0 || !mrrMxn) return null;
-  const rev = (mrrMxn / state.fx) * (blendedTakePct / 100);
+function computePaybackMonths(mrrUsd, investmentUsd, blendedTakePct) {
+  if (!investmentUsd || investmentUsd <= 0 || !mrrUsd) return null;
+  const rev = mrrUsd * (blendedTakePct / 100);
   if (rev <= 0) return null;
   return investmentUsd / rev;
 }
@@ -1392,74 +1348,74 @@ function computePaybackMonths(mrrMxn, investmentUsd, blendedTakePct) {
 // ---------- STATE ----------
 let state = {
   data: null,
-  period: 'mtd', blockSize: 'gmv', sortBy: 'mrr', viewMode: 'actual',
-  currency: 'usd', fx: 20.0, sheetsUrl: '',
+  period: 'mtd', blockSize: 'gmv', sortBy: 'mrr',
+  sheetsUrl: '',
+  goals: [],
   modalCtx: null
 };
+function goalMrrUsd() {
+  const g = (state.goals || []).find(x => x.metric === 'mrr');
+  return g ? Number(g.target_value) || GOAL_MRR_USD_FALLBACK : GOAL_MRR_USD_FALLBACK;
+}
+function goalTargetDate() {
+  const g = (state.goals || []).find(x => x.metric === 'mrr');
+  return g && g.target_date ? new Date(g.target_date) : new Date('2026-12-31');
+}
 
 // ---------- RENDER ----------
 function render() {
   const { brands, hubs } = state.data;
-  const includeProjected = state.viewMode === 'planned';
+  const goalMrr = goalMrrUsd();
+  const targetDate = goalTargetDate();
 
-  // Compute which hubs are visible (have stores or projections)
+  // Compute which hubs are visible (have stores assigned, or alwaysShow flag)
   const usedHubIds = new Set();
   brands.forEach(b => {
     b.stores.forEach(s => { if (s.hub_id) usedHubIds.add(s.hub_id); });
-    (b.projections || []).forEach(p => {
-      if (p.column && p.column.startsWith('dk-')) usedHubIds.add(p.column.slice(3));
-    });
   });
   const visibleHubs = hubs.filter(h => usedHubIds.has(h.id) || h.alwaysShow);
 
   // Max slots across all brands (global minimum 10)
   const maxSlotsGlobal = Math.max(MIN_BM_SLOTS, ...brands.map(b => b.maxSlots || MIN_BM_SLOTS));
 
-  // Compute per-brand metrics
+  // Per-brand metrics — everything is forecast now, no actual/projected split
   const brandTotals = brands.map(b => {
-    const baseline = b.stores.filter(s => s.type === 'baseline').reduce((s,x) => s + x.gmv_mxn, 0);
-    const bm = b.stores.filter(s => s.type === 'bm').reduce((s,x) => s + x.gmv_mxn, 0);
-    const dk = b.stores.filter(s => s.type === 'dk').reduce((s,x) => s + x.gmv_mxn, 0);
-    const projTotal = (b.projections || []).reduce((s,p) => s + (p.gmv_mxn || 0), 0);
+    const baseline = b.stores.filter(s => s.type === 'baseline').reduce((s,x) => s + x.gmv_usd, 0);
+    const bm = b.stores.filter(s => s.type === 'bm').reduce((s,x) => s + x.gmv_usd, 0);
+    const dk = b.stores.filter(s => s.type === 'dk').reduce((s,x) => s + x.gmv_usd, 0);
     const growth = bm + dk;
     const countedBase = b.baselineSigned ? baseline : 0;
-    const mrrActual = countedBase + growth;
-    const mrrWithProj = mrrActual + projTotal;
+    const mrr = countedBase + growth;
 
-    // Other revenue streams (Franchise Fees + EBITDA) — per-store, not derived from GMV
-    const ffActual = b.stores.reduce((s,x) => {
+    const ff = b.stores.reduce((s,x) => {
       if (x.type === 'baseline' && !b.baselineSigned) return s;
-      return s + (x.franchise_fee_mxn || 0);
+      return s + (x.franchise_fee_usd || 0);
     }, 0);
-    const ebitdaActual = b.stores.reduce((s,x) => {
+    const ebitda = b.stores.reduce((s,x) => {
       if (x.type === 'baseline' && !b.baselineSigned) return s;
-      return s + (x.ebitda_mxn || 0);
+      return s + (x.ebitda_usd || 0);
     }, 0);
-    const revenueOther = ffActual + ebitdaActual;
+    const revenueOther = ff + ebitda;
 
-    const actualRev = b.stores.reduce((s,x) => {
+    const totalRev = b.stores.reduce((s,x) => {
       if (x.type === 'baseline' && !b.baselineSigned) return s;
-      return s + x.gmv_mxn * x.take_rate_pct/100;
+      return s + x.gmv_usd * x.take_rate_pct/100;
     }, 0);
-    const projRev = (b.projections || []).reduce((s,p) => s + p.gmv_mxn * (p.take_rate_pct || 18)/100, 0);
-    const totalRev = actualRev + (includeProjected ? projRev : 0);
-    const denom = includeProjected ? mrrWithProj : mrrActual;
-    const blendedTake = denom > 0 ? (totalRev / denom) * 100 : 0;
+    const blendedTake = mrr > 0 ? (totalRev / mrr) * 100 : 0;
 
-    return { ...b, baseline, bm, dk, growth, countedBase, mrrActual, mrrWithProj, projTotal, take: totalRev, blendedTake, ffActual, ebitdaActual, revenueOther };
+    return { ...b, baseline, bm, dk, growth, countedBase, mrr, take: totalRev, blendedTake, ff, ebitda, revenueOther };
   });
 
   // Sort
   brandTotals.sort((a,b) => {
     if (state.sortBy === 'multiple') {
-      const ma = computeMultiple(includeProjected ? a.mrrWithProj : a.mrrActual, a.investmentUsd) || -1;
-      const mb = computeMultiple(includeProjected ? b.mrrWithProj : b.mrrActual, b.investmentUsd) || -1;
+      const ma = computeMultiple(a.mrr, a.investmentUsd) || -1;
+      const mb = computeMultiple(b.mrr, b.investmentUsd) || -1;
       return mb - ma;
     }
-    if (state.sortBy === 'invested')  return (b.investmentUsd || 0) - (a.investmentUsd || 0);
-    if (state.sortBy === 'projected') return b.projTotal - a.projTotal;
-    if (state.sortBy === 'name')      return a.name.localeCompare(b.name);
-    return (includeProjected ? b.mrrWithProj : b.mrrActual) - (includeProjected ? a.mrrWithProj : a.mrrActual);
+    if (state.sortBy === 'invested') return (b.investmentUsd || 0) - (a.investmentUsd || 0);
+    if (state.sortBy === 'name')     return a.name.localeCompare(b.name);
+    return b.mrr - a.mrr;
   });
 
   // Totals
@@ -1469,87 +1425,52 @@ function render() {
   const signedCount = brandTotals.filter(b => b.baselineSigned && b.baseline > 0).length;
   const excludedCount = brandTotals.filter(b => !b.baselineSigned && b.baseline > 0).length;
 
-  // Per BM slot totals
   const bmSlotTotals = [];
   for (let slot = 1; slot <= maxSlotsGlobal; slot++) {
-    const actualStores = brands.flatMap(b => b.stores.filter(s => s.type === 'bm' && s.slot === slot));
-    const projStores   = brands.flatMap(b => (b.projections || []).filter(p => p.column === `bm-${slot}`));
+    const stores = brands.flatMap(b => b.stores.filter(s => s.type === 'bm' && s.slot === slot));
     bmSlotTotals.push({
       slot,
-      totalActual: actualStores.reduce((s,x) => s + x.gmv_mxn, 0),
-      totalProjected: projStores.reduce((s,x) => s + x.gmv_mxn, 0),
-      countActual: actualStores.length,
-      countProjected: projStores.length
+      total: stores.reduce((s,x) => s + x.gmv_usd, 0),
+      count: stores.length
     });
   }
-  const bmTotalAll = bmSlotTotals.reduce((s,x) => s + x.totalActual, 0);
+  const bmTotalAll = bmSlotTotals.reduce((s,x) => s + x.total, 0);
 
-  // Per hub totals
   const hubTotals = visibleHubs.map(h => {
-    const actualStores = brands.flatMap(b => b.stores.filter(s => s.hub_id === h.id));
-    const projStores = brands.flatMap(b => (b.projections || []).filter(p => p.column === `dk-${h.id}`));
+    const stores = brands.flatMap(b => b.stores.filter(s => s.hub_id === h.id));
     return {
       hub: h,
-      totalActual: actualStores.reduce((s,x) => s + x.gmv_mxn, 0),
-      totalProjected: projStores.reduce((s,x) => s + x.gmv_mxn, 0),
-      countActual: actualStores.length,
-      countProjected: projStores.length
+      total: stores.reduce((s,x) => s + x.gmv_usd, 0),
+      count: stores.length
     };
   });
-  const dkTotalAll = hubTotals.reduce((s,h) => s + h.totalActual, 0);
+  const dkTotalAll = hubTotals.reduce((s,h) => s + h.total, 0);
 
   const growthAll = bmTotalAll + dkTotalAll;
-  const projectedAll = brandTotals.reduce((s,b) => s + b.projTotal, 0);
-  const projectedCount = brandTotals.reduce((s,b) => s + (b.projections || []).length, 0);
   const brandsInvestedUsd = brandTotals.reduce((s,b) => s + (b.investmentUsd || 0), 0);
   const rappiHubsCapexUsd = hubs.reduce((s,h) => s + ((h.builder || 'Rappi').trim().toLowerCase() === 'rappi' ? (h.capex_usd || 0) : 0), 0);
   const totalInvestedUsd = brandsInvestedUsd + rappiHubsCapexUsd;
 
-  // Time-windowed projections
-  const threeOut = new Date(CURRENT_DATE); threeOut.setMonth(threeOut.getMonth() + 3);
-  let proj3M = 0, projFeb = 0;
-  brands.forEach(b => (b.projections || []).forEach(p => {
-    if (!p.open_date) return;
-    const d = new Date(p.open_date);
-    if (d <= threeOut)     proj3M += p.gmv_mxn;
-    if (d <= TARGET_DATE)  projFeb += p.gmv_mxn;
-  }));
-
-  const portfolioActual = baselineSigned + growthAll;
-  const portfolioWithProj = portfolioActual + projectedAll;
-  const displayedMrr = includeProjected ? portfolioWithProj : portfolioActual;
+  const displayedMrr = baselineSigned + growthAll;
   const portfolioTake = brandTotals.reduce((s,b) => s + b.take, 0);
   const blendedTakePct = displayedMrr > 0 ? (portfolioTake / displayedMrr) * 100 : 0;
   const totalStoresReal = brands.reduce((s,b) => s + b.stores.filter(x => x.type !== 'baseline').length, 0);
 
-  const portfolioMultiple = totalInvestedUsd > 0 ? (displayedMrr / state.fx) / totalInvestedUsd : null;
+  const portfolioMultiple = computeMultiple(displayedMrr, totalInvestedUsd);
   const portfolioPayback = computePaybackMonths(displayedMrr, totalInvestedUsd, blendedTakePct);
 
-  const gap = GOAL_MRR_MXN - displayedMrr;
-  const monthsLeft = monthsBetween(CURRENT_DATE, TARGET_DATE);
+  const gap = goalMrr - displayedMrr;
+  const monthsLeft = Math.max(monthsBetween(CURRENT_DATE, targetDate), 0);
   const requiredMom = (displayedMrr > 0 && monthsLeft > 0)
-    ? (Math.pow(GOAL_MRR_MXN/displayedMrr, 1/monthsLeft) - 1) * 100 : 0;
-  const pctGoal = (displayedMrr / GOAL_MRR_MXN) * 100;
+    ? (Math.pow(goalMrr/displayedMrr, 1/monthsLeft) - 1) * 100 : 0;
+  const pctGoal = goalMrr > 0 ? (displayedMrr / goalMrr) * 100 : 0;
 
-  // KPIs
-  const goalBanner = document.getElementById('goal-banner');
-  const kpiCurrent = document.getElementById('kpi-current');
-  const kpiCurrentLabel = document.getElementById('kpi-current-label');
-  if (includeProjected) {
-    goalBanner.classList.add('planned-mode');
-    kpiCurrent.classList.remove('primary'); kpiCurrent.classList.add('projected-color');
-    kpiCurrentLabel.textContent = 'MRR Forward (Feb 2027)';
-  } else {
-    goalBanner.classList.remove('planned-mode');
-    kpiCurrent.classList.add('primary'); kpiCurrent.classList.remove('projected-color');
-    kpiCurrentLabel.textContent = 'MRR Actual';
-  }
-
-  document.getElementById('kpi-goal').textContent = fmtCcyNoSuffix(GOAL_MRR_MXN);
-  kpiCurrent.textContent = fmtCcyNoSuffix(displayedMrr);
-  document.getElementById('kpi-current-sub').textContent = `${pctGoal.toFixed(1)}% de meta · ${state.currency.toUpperCase()}`;
+  document.getElementById('kpi-goal').textContent = fmtCcyNoSuffix(goalMrr);
+  const kpiGoalSub = document.getElementById('kpi-goal-sub');
+  if (kpiGoalSub) kpiGoalSub.textContent = `${monthsLeft}m al target · USD`;
+  document.getElementById('kpi-current').textContent = fmtCcyNoSuffix(displayedMrr);
+  document.getElementById('kpi-current-sub').textContent = `${pctGoal.toFixed(1)}% de meta · USD`;
   document.getElementById('kpi-gap').textContent = fmtCcyNoSuffix(Math.max(gap, 0));
-  document.getElementById('kpi-gap-label').textContent = includeProjected ? 'Gap post-pipeline' : 'Gap a Meta';
   const gapSub = document.getElementById('kpi-gap-sub');
   gapSub.textContent = `+${requiredMom.toFixed(1)}% MoM requerido`;
   gapSub.className = 'sub ' + (requiredMom > 10 ? 'neg' : requiredMom > 5 ? '' : 'pos');
@@ -1557,15 +1478,15 @@ function render() {
   document.getElementById('kpi-invested-sub').textContent = `Year-1 · ${brandTotals.filter(b => b.investmentUsd > 0).length} brands`;
   document.getElementById('kpi-efficiency').textContent = portfolioMultiple !== null ? `${portfolioMultiple.toFixed(3)}×` : '—';
   document.getElementById('kpi-efficiency-sub').textContent = portfolioMultiple !== null
-    ? `${includeProjected ? 'Forward' : 'Actual'} · Payback ${portfolioPayback ? portfolioPayback.toFixed(0) + 'm' : '—'}`
+    ? `Forecast · Payback ${portfolioPayback ? portfolioPayback.toFixed(0) + 'm' : '—'}`
     : 'Set investments';
 
-  const baselinePct = Math.min((baselineSigned/GOAL_MRR_MXN)*100, 100);
-  const growthPct = Math.min((growthAll/GOAL_MRR_MXN)*100, 100 - baselinePct);
-  const projectedPct = includeProjected ? Math.min((projectedAll/GOAL_MRR_MXN)*100, 100 - baselinePct - growthPct) : 0;
+  const baselinePct = goalMrr > 0 ? Math.min((baselineSigned/goalMrr)*100, 100) : 0;
+  const growthPct = goalMrr > 0 ? Math.min((growthAll/goalMrr)*100, 100 - baselinePct) : 0;
   document.getElementById('progress-baseline').style.width = `${baselinePct}%`;
   document.getElementById('progress-growth').style.width = `${growthPct}%`;
-  document.getElementById('progress-projected').style.width = `${projectedPct}%`;
+  const progressEnd = document.getElementById('progress-marker-end');
+  if (progressEnd) progressEnd.textContent = `${fmtCcyNoSuffix(goalMrr)} · ${targetDate.toISOString().slice(0,7)}`;
 
   document.getElementById('bs-total').textContent = fmtCcyNoSuffix(baselineAll);
   document.getElementById('bs-signed').textContent = fmtCcyNoSuffix(baselineSigned);
@@ -1574,28 +1495,12 @@ function render() {
   document.getElementById('bs-excluded-count').textContent = `(${excludedCount})`;
   document.getElementById('bs-growth').textContent = fmtCcyNoSuffix(growthAll);
 
-  const pipelineStrip = document.getElementById('pipeline-strip');
-  if (projectedCount > 0) {
-    pipelineStrip.style.display = 'flex';
-    document.getElementById('pp-total').textContent = fmtCcyNoSuffix(projectedAll);
-    document.getElementById('pp-count').textContent = `(${projectedCount})`;
-    document.getElementById('pp-3m').textContent = fmtCcyNoSuffix(proj3M);
-    document.getElementById('pp-feb').textContent = fmtCcyNoSuffix(projFeb);
-    const postGap = GOAL_MRR_MXN - (portfolioActual + projFeb);
-    document.getElementById('pp-gap').textContent = fmtCcyNoSuffix(Math.max(postGap, 0));
-  } else {
-    pipelineStrip.style.display = 'none';
-  }
-
-  // Footer
   document.getElementById('foot-mrr').textContent = fmtCcyNoSuffix(displayedMrr);
   document.getElementById('foot-mrr-bd').textContent = `${brands.length} brands · ${totalStoresReal} stores`;
   document.getElementById('foot-baseline').textContent = fmtCcyNoSuffix(baselineSigned);
   document.getElementById('foot-baseline-bd').textContent = `${signedCount} firmadas`;
   document.getElementById('foot-growth').textContent = fmtCcyNoSuffix(growthAll);
   document.getElementById('foot-growth-bd').textContent = `B&M ${fmtCcyNoSuffix(bmTotalAll)} · DK ${fmtCcyNoSuffix(dkTotalAll)}`;
-  document.getElementById('foot-projected').textContent = fmtCcyNoSuffix(projectedAll);
-  document.getElementById('foot-projected-bd').textContent = `${projectedCount} ubicaciones`;
   document.getElementById('foot-invested').textContent = fmtUsd(totalInvestedUsd);
   document.getElementById('foot-invested-bd').textContent = `Year-1 USD`;
   document.getElementById('foot-multiple').textContent = portfolioMultiple !== null ? `${portfolioMultiple.toFixed(3)}×` : '—';
@@ -1606,20 +1511,17 @@ function render() {
   grid.innerHTML = '';
 
   const colWidths = [
-    '200px',        // brand
-    '130px',        // investment
-    '130px',        // baseline
+    '200px',
+    '130px',
+    '130px',
     ...Array(maxSlotsGlobal).fill('100px'),
     ...visibleHubs.map(() => '110px'),
-    '70px',         // add DK
-    '130px'         // metric
+    '70px',
+    '130px'
   ];
   grid.style.gridTemplateColumns = colWidths.join(' ');
 
-  const allGmvs = [
-    ...brands.flatMap(b => b.stores.map(s => s.gmv_mxn)),
-    ...brands.flatMap(b => (b.projections || []).map(p => p.gmv_mxn))
-  ];
+  const allGmvs = brands.flatMap(b => b.stores.map(s => s.gmv_usd));
   const maxGmv = Math.max(...allGmvs, 1);
 
   // Header row
@@ -1652,9 +1554,8 @@ function render() {
     head.className = 'col-header type-bm' + (slot === 1 ? ' type-bm-group-start' : '');
     head.innerHTML = `
       <span class="col-title">■ B&amp;M ${String(slot).padStart(2,'0')}</span>
-      <span class="col-sub">${slotData.countActual > 0 ? `${slotData.countActual} tdas.` : 'slot'}</span>
-      <span class="col-total">${slotData.totalActual > 0 ? fmtCcyNoSuffix(slotData.totalActual) : '—'}</span>
-      ${slotData.totalProjected > 0 ? `<span class="projected-mini">+${fmtCcyNoSuffix(slotData.totalProjected)}</span>` : ''}
+      <span class="col-sub">${slotData.count > 0 ? `${slotData.count} tdas.` : 'slot'}</span>
+      <span class="col-total">${slotData.total > 0 ? fmtCcyNoSuffix(slotData.total) : '—'}</span>
     `;
     grid.appendChild(head);
   }
@@ -1670,8 +1571,7 @@ function render() {
       <span class="col-title">◆ DK ${String(idx+1).padStart(2,'0')}</span>
       <span class="col-sub">${hub.name} · ${hub.city}</span>
       <span class="col-cap-tag ${isAliadoBuilder ? 'aliado' : 'rappi'}">Built: ${builder} · Op: ${operator}</span>
-      <span class="col-total">${fmtCcyNoSuffix(hubData.totalActual)}</span>
-      ${hubData.totalProjected > 0 ? `<span class="projected-mini">+${fmtCcyNoSuffix(hubData.totalProjected)}</span>` : ''}
+      <span class="col-total">${fmtCcyNoSuffix(hubData.total)}</span>
       <span class="col-edit-hint">✎</span>
     `;
     head.onclick = () => openDkEditModal(hub);
@@ -1699,15 +1599,13 @@ function render() {
     rh.className = 'row-header';
     rh.style.position = 'relative';
     const hasBaseline = brand.baseline > 0;
-    const displayMrr = includeProjected ? brand.mrrWithProj : brand.mrrActual;
     rh.innerHTML = `
       <div class="brand-name">${brand.name}</div>
       <div class="brand-op">${brand.operator}</div>
       <div class="brand-mrr">
-        <span>${fmtCcyNoSuffix(displayMrr)}</span>
-        <span class="pct">${((displayMrr/GOAL_MRR_MXN)*100).toFixed(1)}%</span>
+        <span>${fmtCcyNoSuffix(brand.mrr)}</span>
+        <span class="pct">${(goalMrr > 0 ? (brand.mrr/goalMrr)*100 : 0).toFixed(1)}%</span>
       </div>
-      ${brand.projTotal > 0 ? `<div class="brand-proj">+ ${fmtCcyNoSuffix(brand.projTotal)} planeado</div>` : ''}
       ${hasBaseline ? `
         <div class="toggle-baseline ${brand.baselineSigned ? 'active' : ''}" data-brand-id="${brand.id}">
           <span class="dot"></span>
@@ -1763,13 +1661,10 @@ function render() {
       const cell = document.createElement('div');
       const colKey = `bm-${slot}`;
       const storeInSlot = brand.stores.find(s => s.type === 'bm' && s.slot === slot);
-      const projections = includeProjected ? (brand.projections || []).filter(p => p.column === colKey) : [];
       const cellClass = slot === 1 ? ' bm-start' : '';
 
-      // Check if this slot is beyond the brand's max — show "+ slot" button on the next available slot
       if (slot > brandMaxSlots) {
         if (slot === brandMaxSlots + 1) {
-          // Show "+ add slot" cell
           cell.className = 'cell add-bm-slot' + cellClass;
           cell.innerHTML = `+ slot`;
           cell.onclick = () => {
@@ -1779,7 +1674,6 @@ function render() {
             toast(`Slot agregado a ${b.name}`, 'ok');
           };
         } else {
-          // Beyond current brand's slots — empty non-interactive
           cell.className = 'cell empty' + cellClass;
           cell.style.opacity = '0.3';
         }
@@ -1787,34 +1681,24 @@ function render() {
         continue;
       }
 
-      if (!storeInSlot && projections.length === 0) {
+      if (!storeInSlot) {
         cell.className = 'cell slot-empty' + cellClass;
         cell.onclick = () => openAddBlockModal(brand.id, colKey, `B&M Slot ${String(slot).padStart(2,'0')}`, 'bm', { slot });
       } else {
-        const hasActual = !!storeInSlot;
-        const hasProj = projections.length > 0;
-        let cls = 'cell' + cellClass;
-        if (hasProj && !hasActual) cls += ' only-projected';
-        else if (hasProj) cls += ' has-projected';
-        cell.className = cls;
-        const actualGmv = hasActual ? storeInSlot.gmv_mxn : 0;
-        const projGmv = projections.reduce((s,p) => s + p.gmv_mxn, 0);
-        cell.innerHTML = `<span class="cell-total">${fmtCcyNoSuffix(actualGmv + projGmv)}${hasProj && hasActual ? ` <span style="color:var(--projected);font-size:8px;">+${fmtCcyNoSuffix(projGmv)}</span>` : ''}</span>`;
-        if (hasActual) cell.appendChild(makeStoreBlock(storeInSlot, allGmvs, maxGmv, true, brand));
-        projections.forEach(p => cell.appendChild(makeProjectedBlock(p, brand.id, colKey, `B&M Slot ${String(slot).padStart(2,'0')}`, allGmvs, maxGmv)));
+        cell.className = 'cell' + cellClass;
+        cell.innerHTML = `<span class="cell-total">${fmtCcyNoSuffix(storeInSlot.gmv_usd)}</span>`;
+        cell.appendChild(makeStoreBlock(storeInSlot, allGmvs, maxGmv, true, brand));
       }
       grid.appendChild(cell);
     }
 
-    // DK cells
     visibleHubs.forEach((hub, idx) => {
       const cell = document.createElement('div');
       const colKey = `dk-${hub.id}`;
       const storesInHub = brand.stores.filter(s => s.hub_id === hub.id);
-      const projections = includeProjected ? (brand.projections || []).filter(p => p.column === colKey) : [];
       const cellClass = idx === 0 ? ' dk-start' : '';
 
-      if (storesInHub.length === 0 && projections.length === 0) {
+      if (storesInHub.length === 0) {
         cell.className = 'cell slot-empty' + cellClass;
         cell.onclick = () => openAddBlockModal(brand.id, colKey, `DK ${hub.name}`, 'dk', { hubId: hub.id, hubName: hub.name, city: hub.city });
       } else {
@@ -1823,17 +1707,10 @@ function render() {
           if (e.target !== cell) return;
           openAddBlockModal(brand.id, colKey, `DK ${hub.name}`, 'dk', { hubId: hub.id, hubName: hub.name, city: hub.city });
         });
-        const hasActual = storesInHub.length > 0;
-        const hasProj = projections.length > 0;
-        let cls = 'cell' + cellClass;
-        if (hasProj && !hasActual) cls += ' only-projected';
-        else if (hasProj) cls += ' has-projected';
-        cell.className = cls;
-        const actualGmv = storesInHub.reduce((s,x) => s + x.gmv_mxn, 0);
-        const projGmv = projections.reduce((s,p) => s + p.gmv_mxn, 0);
-        cell.innerHTML = `<span class="cell-total">${fmtCcyNoSuffix(actualGmv + projGmv)}${hasProj && hasActual ? ` <span style="color:var(--projected);font-size:8px;">+${fmtCcyNoSuffix(projGmv)}</span>` : ''}</span>`;
+        cell.className = 'cell' + cellClass;
+        const totalGmv = storesInHub.reduce((s,x) => s + x.gmv_usd, 0);
+        cell.innerHTML = `<span class="cell-total">${fmtCcyNoSuffix(totalGmv)}</span>`;
         storesInHub.forEach(store => cell.appendChild(makeStoreBlock(store, allGmvs, maxGmv, true, brand)));
-        projections.forEach(p => cell.appendChild(makeProjectedBlock(p, brand.id, colKey, `DK ${hub.name}`, allGmvs, maxGmv)));
       }
       grid.appendChild(cell);
     });
@@ -1844,15 +1721,14 @@ function render() {
     filler.style.borderLeft = 'none';
     grid.appendChild(filler);
 
-    // Metric cell
     const metricCell = document.createElement('div');
     metricCell.className = 'cell metric-cell';
-    const multiple = computeMultiple(displayMrr, brand.investmentUsd);
-    const payback = computePaybackMonths(displayMrr, brand.investmentUsd, brand.blendedTake);
+    const multiple = computeMultiple(brand.mrr, brand.investmentUsd);
+    const payback = computePaybackMonths(brand.mrr, brand.investmentUsd, brand.blendedTake);
     const multTier = tierForMultiple(multiple);
     const payTier = payback === null ? 'null' : (payback <= 36 ? 'good' : payback <= 72 ? 'mid' : 'bad');
     metricCell.innerHTML = `
-      <div class="metric-mrr">${fmtCcyNoSuffix(displayMrr)}<span class="pct">${((displayMrr/GOAL_MRR_MXN)*100).toFixed(1)}%</span></div>
+      <div class="metric-mrr">${fmtCcyNoSuffix(brand.mrr)}<span class="pct">${(goalMrr > 0 ? (brand.mrr/goalMrr)*100 : 0).toFixed(1)}%</span></div>
       ${brand.revenueOther > 0 ? `<div class="metric-rev"><span class="rev-label">Rev</span>${fmtCcyNoSuffix(brand.revenueOther)}</div>` : ''}
       <div class="metric-multiple ${multTier}">${multiple !== null ? `${multiple.toFixed(3)}×` : '—'}</div>
       <div class="metric-label">GMV / Investment</div>
@@ -1896,9 +1772,8 @@ function render() {
     cell.className = 'row-total';
     cell.style.background = 'var(--paper-deep)';
     if (idx === 0) cell.style.borderLeft = '3px solid var(--rule)';
-    const total = slotData.totalActual + (includeProjected ? slotData.totalProjected : 0);
-    cell.innerHTML = total > 0
-      ? `${fmtCcyNoSuffix(total)}<span class="sub">${slotData.countActual + (includeProjected ? slotData.countProjected : 0)} tdas.</span>`
+    cell.innerHTML = slotData.total > 0
+      ? `${fmtCcyNoSuffix(slotData.total)}<span class="sub">${slotData.count} tdas.</span>`
       : `<span style="color: var(--muted);">—</span><span class="sub">vacío</span>`;
     grid.appendChild(cell);
   });
@@ -1908,12 +1783,10 @@ function render() {
     cell.className = 'row-total';
     cell.style.background = 'var(--paper-deep)';
     if (idx === 0) cell.style.borderLeft = '3px solid var(--rule)';
-    const total = ht.totalActual + (includeProjected ? ht.totalProjected : 0);
-    cell.innerHTML = `${fmtCcyNoSuffix(total)}<span class="sub">${ht.countActual + (includeProjected ? ht.countProjected : 0)}</span>`;
+    cell.innerHTML = `${fmtCcyNoSuffix(ht.total)}<span class="sub">${ht.count}</span>`;
     grid.appendChild(cell);
   });
 
-  // Add-DK column in totals row — empty
   const addDkTotal = document.createElement('div');
   addDkTotal.className = 'row-total';
   addDkTotal.style.background = 'var(--paper-deep)';
@@ -1922,7 +1795,7 @@ function render() {
 
   const pgt = document.createElement('div');
   pgt.className = 'row-total';
-  pgt.style.background = includeProjected ? 'var(--projected)' : 'var(--accent)';
+  pgt.style.background = 'var(--accent)';
   pgt.style.color = 'var(--paper)';
   pgt.style.borderLeft = '3px solid var(--rule)';
   pgt.style.fontFamily = "'DM Serif Display', serif";
@@ -1947,13 +1820,13 @@ function render() {
 
 function makeStoreBlock(store, allGmvs, maxGmv, included, brand) {
   const block = document.createElement('div');
-  const tier = tierForGmv(store.gmv_mxn, allGmvs);
+  const tier = tierForGmv(store.gmv_usd, allGmvs);
   let classes = `store-block ${store.type} tier-${tier}`;
   if (store.type === 'baseline' && !included) classes += ' excluded';
   block.className = classes;
   block.style.cursor = 'pointer';
   if (state.blockSize === 'gmv') {
-    const ratio = store.gmv_mxn / maxGmv;
+    const ratio = store.gmv_usd / maxGmv;
     const side = Math.max(14, Math.sqrt(ratio) * 44);
     block.style.width = `${side}px`; block.style.height = `${side}px`;
   } else {
@@ -1968,27 +1841,6 @@ function makeStoreBlock(store, allGmvs, maxGmv, included, brand) {
   block.addEventListener('mouseleave', hideTooltip);
   return block;
 }
-function makeProjectedBlock(proj, brandId, colKey, colLabel, allGmvs, maxGmv) {
-  const block = document.createElement('div');
-  const tier = tierForGmv(proj.gmv_mxn, allGmvs);
-  block.className = `store-block projected tier-${tier}`;
-  if (state.blockSize === 'gmv') {
-    const ratio = proj.gmv_mxn / maxGmv;
-    const side = Math.max(14, Math.sqrt(ratio) * 44);
-    block.style.width = `${side}px`; block.style.height = `${side}px`;
-  } else {
-    block.style.width = '22px'; block.style.height = '22px';
-  }
-  block.addEventListener('click', (e) => {
-    e.stopPropagation();
-    openProjectionModal(brandId, colKey, colLabel, proj);
-  });
-  block.addEventListener('mouseenter', (e) => showProjectedTooltip(e, proj, colLabel));
-  block.addEventListener('mousemove', moveTooltip);
-  block.addEventListener('mouseleave', hideTooltip);
-  return block;
-}
-
 // ---------- TOOLTIP ----------
 const tooltip = document.getElementById('tooltip');
 function showTooltip(e, store, included) {
@@ -1996,15 +1848,15 @@ function showTooltip(e, store, included) {
   if (store.type === 'baseline') { typeLabel = `● Baseline · MRR firmado`; typeClass = 'baseline'; }
   else if (store.type === 'dk')  { typeLabel = `◆ Dark Kitchen · ${store.hub_name}`; }
   else                            { typeLabel = `■ B&M · Slot ${store.slot} · ${store.hub_name}`; }
-  const rev = store.gmv_mxn * store.take_rate_pct / 100;
-  const ff = store.franchise_fee_mxn || 0;
-  const eb = store.ebitda_mxn || 0;
+  const rev = store.gmv_usd * store.take_rate_pct / 100;
+  const ff = store.franchise_fee_usd || 0;
+  const eb = store.ebitda_usd || 0;
   const excludedNote = (store.type === 'baseline' && included === false)
     ? `<div class="tt-excluded">⚠ NO suma a meta</div>` : '';
   tooltip.innerHTML = `
     <div class="tt-type ${typeClass}">${typeLabel}</div>
     <div class="tt-title">${store.name}</div>
-    <div class="tt-row"><span>GMV</span><strong>${fmtCcyNoSuffix(store.gmv_mxn)}</strong></div>
+    <div class="tt-row"><span>GMV</span><strong>${fmtCcyNoSuffix(store.gmv_usd)}</strong></div>
     <div class="tt-row"><span>Take Rate</span><strong>${store.take_rate_pct.toFixed(1)}%</strong></div>
     <div class="tt-row"><span>Rappi Rev.</span><strong>${fmtCcyNoSuffix(rev)}</strong></div>
     ${ff > 0 ? `<div class="tt-row"><span>Franchise Fee</span><strong>${fmtCcyNoSuffix(ff)}</strong></div>` : ''}
@@ -2012,20 +1864,6 @@ function showTooltip(e, store, included) {
     ${store.city !== '—' ? `<div class="tt-row"><span>Ciudad</span><strong>${store.city}</strong></div>` : ''}
     ${excludedNote}
     <div class="tt-excluded" style="color: var(--baseline);">Click para editar</div>
-  `;
-  tooltip.classList.add('visible'); moveTooltip(e);
-}
-function showProjectedTooltip(e, proj, colLabel) {
-  const rev = proj.gmv_mxn * (proj.take_rate_pct || 18) / 100;
-  const openDate = proj.open_date ? new Date(proj.open_date).toLocaleDateString('es-MX', { month: 'short', year: 'numeric' }) : '—';
-  tooltip.innerHTML = `
-    <div class="tt-type projected">✦ Pipeline · ${colLabel}</div>
-    <div class="tt-title">${proj.name}</div>
-    <div class="tt-row"><span>GMV esperado</span><strong>${fmtCcyNoSuffix(proj.gmv_mxn)}</strong></div>
-    <div class="tt-row"><span>Take Rate</span><strong>${(proj.take_rate_pct || 18).toFixed(1)}%</strong></div>
-    <div class="tt-row"><span>Rappi Rev.</span><strong>${fmtCcyNoSuffix(rev)}</strong></div>
-    <div class="tt-row"><span>Apertura</span><strong>${openDate}</strong></div>
-    <div class="tt-excluded">Click para editar</div>
   `;
   tooltip.classList.add('visible'); moveTooltip(e);
 }
@@ -2071,20 +1909,20 @@ function openStoreEditModal(store, brand) {
         <input type="text" id="ms-name" placeholder="Nombre del store" />
       </div>
       <div class="modal-field">
-        <label>GMV (MXN/mes)</label>
-        <input type="number" id="ms-gmv" min="0" step="10000" placeholder="150000" />
+        <label>GMV (USD/mes)</label>
+        <input type="number" id="ms-gmv" min="0" step="500" placeholder="9000" />
       </div>
       <div class="modal-field">
         <label>Take Rate (%)</label>
         <input type="number" id="ms-take" min="0" max="100" step="0.5" placeholder="17" />
       </div>
       <div class="modal-field">
-        <label>Franchise Fee (MXN/mes)</label>
-        <input type="number" id="ms-ff" min="0" step="1000" placeholder="0" />
+        <label>Franchise Fee (USD/mes)</label>
+        <input type="number" id="ms-ff" min="0" step="100" placeholder="0" />
       </div>
       <div class="modal-field">
-        <label>EBITDA (MXN/mes)</label>
-        <input type="number" id="ms-ebitda" min="0" step="1000" placeholder="0" />
+        <label>EBITDA (USD/mes)</label>
+        <input type="number" id="ms-ebitda" min="0" step="100" placeholder="0" />
       </div>
       ${!isBaseline ? `
       <div class="modal-field">
@@ -2097,7 +1935,7 @@ function openStoreEditModal(store, brand) {
       </div>` : ''}
     </div>
     <div class="modal-calc">
-      <span>Rappi Revenue (TR · MXN/mes)</span>
+      <span>Rappi Revenue (TR · USD/mes)</span>
       <strong id="ms-calc">$0</strong>
     </div>
     <div class="modal-calc" style="margin-top:8px;">
@@ -2107,10 +1945,10 @@ function openStoreEditModal(store, brand) {
   `;
 
   document.getElementById('ms-name').value = store.name;
-  document.getElementById('ms-gmv').value = store.gmv_mxn;
+  document.getElementById('ms-gmv').value = store.gmv_usd;
   document.getElementById('ms-take').value = store.take_rate_pct;
-  document.getElementById('ms-ff').value = store.franchise_fee_mxn || 0;
-  document.getElementById('ms-ebitda').value = store.ebitda_mxn || 0;
+  document.getElementById('ms-ff').value = store.franchise_fee_usd || 0;
+  document.getElementById('ms-ebitda').value = store.ebitda_usd || 0;
   if (!isBaseline) {
     document.getElementById('ms-loc').value = store.hub_name || '';
     document.getElementById('ms-city').value = store.city || '';
@@ -2135,66 +1973,7 @@ function openStoreEditModal(store, brand) {
   setTimeout(() => document.getElementById('ms-name').focus(), 50);
 }
 
-// ---- PROJECTION MODAL ----
-function openProjectionModal(brandId, colKey, colLabel, existingProj) {
-  const brand = state.data.brands.find(b => b.id === brandId);
-  state.modalCtx = { type: 'projection', brandId, colKey, colLabel, projId: existingProj ? existingProj.id : null };
-  modalContent.classList.remove('mode-brand', 'mode-dk');
-
-  document.getElementById('modal-header-text').textContent = 'Planear';
-  document.getElementById('modal-slot-label').textContent = existingProj ? existingProj.name : colLabel;
-  document.getElementById('modal-context').textContent = `${brand.name} · ${colLabel} · ${existingProj ? 'Editar' : 'Nueva'}`;
-
-  const body = document.getElementById('modal-body');
-  body.innerHTML = `
-    <div class="modal-grid">
-      <div class="modal-field full">
-        <label>Nombre</label>
-        <input type="text" id="mp-name" placeholder="Ej: Rosetta Interlomas" />
-      </div>
-      <div class="modal-field">
-        <label>GMV esperado (MXN/mes)</label>
-        <input type="number" id="mp-gmv" placeholder="150000" min="0" step="10000" />
-      </div>
-      <div class="modal-field">
-        <label>Take Rate (%)</label>
-        <input type="number" id="mp-take" placeholder="18" step="0.5" min="0" max="100" />
-      </div>
-      <div class="modal-field full">
-        <label>Fecha de apertura</label>
-        <input type="date" id="mp-date" />
-      </div>
-    </div>
-    <div class="modal-calc">
-      <span>Rappi Revenue (MXN/mes)</span>
-      <strong id="mp-calc">$0</strong>
-    </div>
-  `;
-
-  const nameI = document.getElementById('mp-name');
-  const gmvI = document.getElementById('mp-gmv');
-  const takeI = document.getElementById('mp-take');
-  const dateI = document.getElementById('mp-date');
-  nameI.value = existingProj ? existingProj.name : '';
-  gmvI.value  = existingProj ? existingProj.gmv_mxn : '';
-  takeI.value = existingProj ? existingProj.take_rate_pct : (colKey.startsWith('dk-') ? 22 : 17);
-  dateI.value = existingProj ? existingProj.open_date : '';
-
-  const updateCalc = () => {
-    const gmv = parseFloat(gmvI.value) || 0;
-    const take = parseFloat(takeI.value) || 0;
-    document.getElementById('mp-calc').textContent = `$${Math.round(gmv * take / 100).toLocaleString('en-US')}`;
-  };
-  gmvI.addEventListener('input', updateCalc);
-  takeI.addEventListener('input', updateCalc);
-  updateCalc();
-
-  document.getElementById('btn-delete').style.display = existingProj ? 'block' : 'none';
-  modal.classList.add('visible');
-  setTimeout(() => nameI.focus(), 50);
-}
-
-// ---- ADD BLOCK MODAL (actual or planned, from an empty cell) ----
+// ---- ADD BLOCK MODAL ----
 function openAddBlockModal(brandId, colKey, colLabel, kind, meta) {
   const brand = state.data.brands.find(b => b.id === brandId);
   state.modalCtx = { type: 'addBlock', brandId, colKey, colLabel, kind, meta };
@@ -2209,31 +1988,24 @@ function openAddBlockModal(brandId, colKey, colLabel, kind, meta) {
   body.innerHTML = `
     <div class="modal-grid">
       <div class="modal-field full">
-        <label>Tipo de bloque</label>
-        <div style="display:flex; gap:14px; padding:4px 0; font-family:'Roboto Mono',monospace; font-size:11px;">
-          <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="ab-mode" value="actual" checked /> Actual</label>
-          <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="ab-mode" value="planned" /> Planeado</label>
-        </div>
-      </div>
-      <div class="modal-field full">
         <label>Nombre</label>
         <input type="text" id="ab-name" placeholder="Ej: Rosetta Interlomas" />
       </div>
       <div class="modal-field">
-        <label>GMV (MXN/mes)</label>
-        <input type="number" id="ab-gmv" min="0" step="10000" placeholder="150000" />
+        <label>GMV (USD/mes)</label>
+        <input type="number" id="ab-gmv" min="0" step="500" placeholder="9000" />
       </div>
       <div class="modal-field">
         <label>Take Rate (%)</label>
         <input type="number" id="ab-take" min="0" max="100" step="0.5" value="${defaultTake}" />
       </div>
-      <div class="modal-field ab-actual-only">
-        <label>Franchise Fee (MXN/mes)</label>
-        <input type="number" id="ab-ff" min="0" step="1000" placeholder="0" value="0" />
+      <div class="modal-field">
+        <label>Franchise Fee (USD/mes)</label>
+        <input type="number" id="ab-ff" min="0" step="100" placeholder="0" value="0" />
       </div>
-      <div class="modal-field ab-actual-only">
-        <label>EBITDA (MXN/mes)</label>
-        <input type="number" id="ab-ebitda" min="0" step="1000" placeholder="0" value="0" />
+      <div class="modal-field">
+        <label>EBITDA (USD/mes)</label>
+        <input type="number" id="ab-ebitda" min="0" step="100" placeholder="0" value="0" />
       </div>
       ${kind === 'bm' ? `
       <div class="modal-field">
@@ -2244,16 +2016,17 @@ function openAddBlockModal(brandId, colKey, colLabel, kind, meta) {
         <label>Ciudad</label>
         <input type="text" id="ab-city" value="CDMX" />
       </div>` : ''}
-      <div class="modal-field full" id="ab-date-wrap" style="display:none;">
-        <label>Fecha de apertura</label>
+      <div class="modal-field full">
+        <label>Fecha de apertura (opcional)</label>
         <input type="date" id="ab-date" />
+        <div class="hint">Si está en el futuro = forecast; en el pasado = ya operando.</div>
       </div>
     </div>
     <div class="modal-calc">
-      <span>Rappi Revenue (TR · MXN/mes)</span>
+      <span>Rappi Revenue (TR · USD/mes)</span>
       <strong id="ab-calc">$0</strong>
     </div>
-    <div class="modal-calc ab-actual-only" style="margin-top:8px;">
+    <div class="modal-calc" style="margin-top:8px;">
       <span>Otros revenue streams (FF + EBITDA)</span>
       <strong id="ab-calc-other">$0</strong>
     </div>
@@ -2264,17 +2037,6 @@ function openAddBlockModal(brandId, colKey, colLabel, kind, meta) {
   const takeI = document.getElementById('ab-take');
   const ffI = document.getElementById('ab-ff');
   const ebitdaI = document.getElementById('ab-ebitda');
-  const dateWrap = document.getElementById('ab-date-wrap');
-  const actualOnly = body.querySelectorAll('.ab-actual-only');
-
-  document.querySelectorAll('input[name="ab-mode"]').forEach(r => {
-    r.addEventListener('change', () => {
-      const planned = r.value === 'planned';
-      if (!r.checked) return;
-      dateWrap.style.display = planned ? '' : 'none';
-      actualOnly.forEach(el => { el.style.display = planned ? 'none' : ''; });
-    });
-  });
 
   const updateCalc = () => {
     const gmv = parseFloat(gmvI.value) || 0;
@@ -2320,13 +2082,13 @@ function openBrandEditModal(brand) {
         <input type="number" id="mb-inv" min="0" step="10000" placeholder="100000" />
       </div>
       <div class="modal-field">
-        <label>Baseline GMV (MXN/mes)</label>
-        <input type="number" id="mb-base" min="0" step="10000" placeholder="0" />
+        <label>Baseline GMV (USD/mes)</label>
+        <input type="number" id="mb-base" min="0" step="500" placeholder="0" />
       </div>
       <div class="modal-field full">
         <label class="modal-checkbox-label">
           <input type="checkbox" id="mb-signed" />
-          Baseline firmada (cuenta al $20M)
+          Baseline firmada (cuenta a la meta)
         </label>
         <div class="hint">Si está activa, la baseline suma al MRR contable</div>
       </div>
@@ -2435,15 +2197,9 @@ function renderManageDksBody() {
   const hubs = state.data.hubs;
 
   const counts = {};
-  hubs.forEach(h => { counts[h.id] = { stores: 0, projections: 0 }; });
+  hubs.forEach(h => { counts[h.id] = { stores: 0 }; });
   state.data.brands.forEach(b => {
     b.stores.forEach(s => { if (s.hub_id && counts[s.hub_id]) counts[s.hub_id].stores++; });
-    (b.projections || []).forEach(p => {
-      if (p.column && p.column.startsWith('dk-')) {
-        const hid = p.column.slice(3);
-        if (counts[hid]) counts[hid].projections++;
-      }
-    });
   });
 
   if (hubs.length === 0) {
@@ -2458,10 +2214,10 @@ function renderManageDksBody() {
 
   const rows = hubs.map(h => {
     const c = counts[h.id];
-    const used = c.stores + c.projections > 0;
+    const used = c.stores > 0;
     const visible = used || h.alwaysShow;
     const checked = h.alwaysShow ? 'checked' : '';
-    const disabled = used ? 'disabled title="Ya visible por tener stores/proyecciones"' : '';
+    const disabled = used ? 'disabled title="Ya visible por tener stores"' : '';
     const builder = (h.builder || 'Rappi').trim();
     const operator = (h.operator || 'Rappi').trim();
     const isAliadoBuilder = builder.toLowerCase() !== 'rappi';
@@ -2473,7 +2229,7 @@ function renderManageDksBody() {
           <span class="dk-name">◆ ${h.name}</span>
           <span class="dk-meta">${h.city || '—'} · <span class="dk-owner-tag ${ownerClass}">Built: ${builder} · Op: ${operator}</span>${cap > 0 ? ` · ${fmtUsd(cap)}` : ''} · ${visible ? 'visible' : 'oculto'}</span>
         </div>
-        <span class="dk-counts">${c.stores} stores · ${c.projections} planes</span>
+        <span class="dk-counts">${c.stores} stores</span>
         <label class="dk-toggle">
           <input type="checkbox" data-action="toggle-show" ${checked} ${disabled} />
           Always show
@@ -2506,11 +2262,10 @@ function renderManageDksBody() {
     row.querySelector('[data-action="delete"]').addEventListener('click', () => {
       const hub = state.data.hubs.find(x => x.id === hubId);
       if (!hub) return;
-      if (!confirm(`¿Eliminar DK "${hub.name}"? Se borrarán todos los stores y proyecciones en este hub across todas las brands.`)) return;
+      if (!confirm(`¿Eliminar DK "${hub.name}"? Se borrarán todos los stores en este hub across todas las brands.`)) return;
       state.data.hubs = state.data.hubs.filter(h => h.id !== hubId);
       state.data.brands.forEach(b => {
         b.stores = b.stores.filter(s => s.hub_id !== hubId);
-        b.projections = (b.projections || []).filter(p => p.column !== `dk-${hubId}`);
       });
       toast(`DK "${hub.name}" eliminado`, 'warn');
       saveAll();
@@ -2521,6 +2276,117 @@ function renderManageDksBody() {
   });
 
   document.getElementById('dk-manage-add').onclick = () => openDkEditModal(null);
+}
+
+// ---- MANAGE GOALS MODAL ----
+function openManageGoalsModal() {
+  state.modalCtx = { type: 'manage-goals' };
+  modalContent.classList.remove('mode-brand'); modalContent.classList.add('mode-dk');
+  document.getElementById('modal-header-text').textContent = 'Metas';
+  document.getElementById('modal-slot-label').textContent = 'Targets';
+  document.getElementById('modal-context').textContent = `${(state.goals || []).length} metas configuradas`;
+  document.getElementById('btn-delete').style.display = 'none';
+  document.getElementById('btn-save').style.display = 'none';
+  document.getElementById('btn-cancel').textContent = 'Cerrar';
+  renderManageGoalsBody();
+  modal.classList.add('visible');
+}
+
+function renderManageGoalsBody() {
+  const body = document.getElementById('modal-body');
+  const goals = state.goals || [];
+  const rows = goals.map(g => `
+    <div class="dk-manage-row" data-goal-id="${g.id}">
+      <div class="dk-info">
+        <span class="dk-name">◎ ${g.name}</span>
+        <span class="dk-meta">${g.metric || '—'} · target ${fmtUsd(Number(g.target_value)||0)} · ${g.target_date || 'sin fecha'} · ${g.owner || '—'} · ${g.status}</span>
+      </div>
+      <button class="icon-btn" data-action="edit" title="Editar">✎</button>
+      <button class="icon-btn danger" data-action="delete" title="Eliminar">×</button>
+    </div>
+  `).join('');
+  body.innerHTML = `
+    <div class="dk-manage-list">${rows || '<div class="dk-manage-empty">No hay metas todavía. Agregá la primera.</div>'}</div>
+    <div style="display:flex; justify-content:flex-end; margin-top:14px;">
+      <button class="btn primary" id="goal-manage-add">+ Nueva meta</button>
+    </div>
+  `;
+  body.querySelectorAll('.dk-manage-row').forEach(row => {
+    const id = row.dataset.goalId;
+    row.querySelector('[data-action="edit"]').addEventListener('click', () => {
+      const g = state.goals.find(x => x.id === id);
+      if (g) openGoalEditModal(g);
+    });
+    row.querySelector('[data-action="delete"]').addEventListener('click', () => {
+      if (!confirm('¿Eliminar esta meta?')) return;
+      state.goals = state.goals.filter(x => x.id !== id);
+      sb.from('goals').delete().eq('id', id);
+      saveAll(); render(); renderManageGoalsBody();
+    });
+  });
+  document.getElementById('goal-manage-add').onclick = () => openGoalEditModal(null);
+}
+
+function openGoalEditModal(goal) {
+  state.modalCtx = { type: 'goal', goalId: goal ? goal.id : null };
+  document.getElementById('modal-header-text').textContent = goal ? 'Editar meta' : 'Nueva meta';
+  document.getElementById('modal-slot-label').textContent = goal ? goal.name : 'Target';
+  document.getElementById('modal-context').textContent = goal ? `Editar meta · ${goal.metric || ''}` : 'Definir nueva meta';
+  document.getElementById('btn-save').style.display = '';
+  document.getElementById('btn-cancel').textContent = 'Cancelar';
+  document.getElementById('btn-delete').style.display = goal ? 'block' : 'none';
+
+  const body = document.getElementById('modal-body');
+  body.innerHTML = `
+    <div class="modal-grid">
+      <div class="modal-field full">
+        <label>Nombre</label>
+        <input type="text" id="mg-name" placeholder="Ej: MRR Originals EOY 2026" />
+      </div>
+      <div class="modal-field">
+        <label>Métrica</label>
+        <select id="mg-metric">
+          <option value="mrr">MRR (USD)</option>
+          <option value="invested">Invested (USD)</option>
+          <option value="stores">Stores (#)</option>
+          <option value="brands">Brands (#)</option>
+          <option value="other">Otra</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label>Valor target</label>
+        <input type="number" id="mg-value" min="0" step="1000" />
+      </div>
+      <div class="modal-field">
+        <label>Fecha target</label>
+        <input type="date" id="mg-date" />
+      </div>
+      <div class="modal-field">
+        <label>Owner</label>
+        <input type="text" id="mg-owner" placeholder="CFO" />
+      </div>
+      <div class="modal-field">
+        <label>Status</label>
+        <select id="mg-status">
+          <option value="on-track">on-track</option>
+          <option value="at-risk">at-risk</option>
+          <option value="behind">behind</option>
+          <option value="done">done</option>
+        </select>
+      </div>
+      <div class="modal-field full">
+        <label>Notas</label>
+        <input type="text" id="mg-notes" placeholder="opcional" />
+      </div>
+    </div>
+  `;
+  document.getElementById('mg-name').value = goal ? goal.name : '';
+  document.getElementById('mg-metric').value = goal ? (goal.metric || 'mrr') : 'mrr';
+  document.getElementById('mg-value').value = goal ? goal.target_value : '';
+  document.getElementById('mg-date').value = goal ? (goal.target_date || '') : '';
+  document.getElementById('mg-owner').value = goal ? (goal.owner || '') : '';
+  document.getElementById('mg-status').value = goal ? (goal.status || 'on-track') : 'on-track';
+  document.getElementById('mg-notes').value = goal ? (goal.notes || '') : '';
 }
 
 // ---- SAVE HANDLER ----
@@ -2539,10 +2405,10 @@ document.getElementById('btn-save').addEventListener('click', () => {
     const store = brand.stores.find(s => s.id === ctx.storeId);
     if (store) {
       store.name = name;
-      store.gmv_mxn = gmv;
+      store.gmv_usd = gmv;
       store.take_rate_pct = take;
-      store.franchise_fee_mxn = ff;
-      store.ebitda_mxn = eb;
+      store.franchise_fee_usd = ff;
+      store.ebitda_usd = eb;
       if (store.type !== 'baseline') {
         const locEl = document.getElementById('ms-loc');
         const cityEl = document.getElementById('ms-city');
@@ -2562,64 +2428,29 @@ document.getElementById('btn-save').addEventListener('click', () => {
     const take = parseFloat(document.getElementById('ab-take').value) || (ctx.kind === 'dk' ? 22 : 17);
     const ff = parseFloat(document.getElementById('ab-ff').value) || 0;
     const ebitda = parseFloat(document.getElementById('ab-ebitda').value) || 0;
-    const mode = document.querySelector('input[name="ab-mode"]:checked').value;
+    const date = (document.getElementById('ab-date') || {}).value || null;
     if (!name) { alert('Dale un nombre'); return; }
     if (gmv <= 0) { alert('GMV debe ser > 0'); return; }
     const brand = state.data.brands.find(b => b.id === ctx.brandId);
 
-    if (mode === 'actual') {
-      const locEl = document.getElementById('ab-loc');
-      const cityEl = document.getElementById('ab-city');
-      const newStore = {
-        id: `${brand.id}-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
-        name,
-        type: ctx.kind,
-        gmv_mxn: gmv,
-        take_rate_pct: take,
-        franchise_fee_mxn: ff,
-        ebitda_mxn: ebitda,
-        slot: ctx.kind === 'bm' ? ctx.meta.slot : null,
-        hub_id: ctx.kind === 'dk' ? ctx.meta.hubId : null,
-        hub_name: ctx.kind === 'dk' ? ctx.meta.hubName : (locEl ? locEl.value.trim() || '—' : '—'),
-        city: ctx.kind === 'dk' ? ctx.meta.city : (cityEl ? cityEl.value.trim() || 'CDMX' : 'CDMX')
-      };
-      brand.stores.push(newStore);
-      toast(`Store "${name}" agregado`, 'ok');
-      saveAll(); closeModal(); render();
-    } else {
-      const date = document.getElementById('ab-date').value;
-      if (!brand.projections) brand.projections = [];
-      brand.projections.push({
-        id: `proj-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
-        column: ctx.colKey, name, gmv_mxn: gmv, take_rate_pct: take, open_date: date
-      });
-      toast(`Plan "${name}" agregado`, 'ok');
-      saveAll(); closeModal();
-      if (state.viewMode === 'actual') setViewMode('planned'); else render();
-    }
-  }
-
-  else if (ctx.type === 'projection') {
-    const name = document.getElementById('mp-name').value.trim();
-    const gmv = parseFloat(document.getElementById('mp-gmv').value) || 0;
-    const take = parseFloat(document.getElementById('mp-take').value) || 18;
-    const date = document.getElementById('mp-date').value;
-    if (!name) { alert('Dale un nombre'); return; }
-    if (gmv <= 0) { alert('GMV debe ser > 0'); return; }
-    const brand = state.data.brands.find(b => b.id === ctx.brandId);
-    if (!brand.projections) brand.projections = [];
-    if (ctx.projId) {
-      const p = brand.projections.find(x => x.id === ctx.projId);
-      if (p) { p.name = name; p.gmv_mxn = gmv; p.take_rate_pct = take; p.open_date = date; }
-    } else {
-      brand.projections.push({
-        id: `proj-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
-        column: ctx.colKey, name, gmv_mxn: gmv, take_rate_pct: take, open_date: date
-      });
-    }
-    saveAll();
-    closeModal();
-    if (state.viewMode === 'actual') setViewMode('planned'); else render();
+    const locEl = document.getElementById('ab-loc');
+    const cityEl = document.getElementById('ab-city');
+    brand.stores.push({
+      id: `${brand.id}-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
+      name,
+      type: ctx.kind,
+      gmv_usd: gmv,
+      take_rate_pct: take,
+      franchise_fee_usd: ff,
+      ebitda_usd: ebitda,
+      slot: ctx.kind === 'bm' ? ctx.meta.slot : null,
+      hub_id: ctx.kind === 'dk' ? ctx.meta.hubId : null,
+      hub_name: ctx.kind === 'dk' ? ctx.meta.hubName : (locEl ? locEl.value.trim() || '—' : '—'),
+      city: ctx.kind === 'dk' ? ctx.meta.city : (cityEl ? cityEl.value.trim() || 'CDMX' : 'CDMX'),
+      open_date: date || null
+    });
+    toast(`Store "${name}" agregado`, 'ok');
+    saveAll(); closeModal(); render();
   }
 
   else if (ctx.type === 'brand') {
@@ -2638,12 +2469,12 @@ document.getElementById('btn-save').addEventListener('click', () => {
       // Update baseline pseudo-store
       const baseStore = b.stores.find(s => s.type === 'baseline');
       if (base > 0) {
-        if (baseStore) { baseStore.gmv_mxn = base; baseStore.name = `${name} Baseline`; }
+        if (baseStore) { baseStore.gmv_usd = base; baseStore.name = `${name} Baseline`; }
         else b.stores.push({
           id: `${b.id}-baseline`, name: `${name} Baseline`, type: 'baseline',
           slot: null, hub_id: null, hub_name: 'Baseline', city: '—',
-          gmv_mxn: base, take_rate_pct: 17,
-          franchise_fee_mxn: 0, ebitda_mxn: 0
+          gmv_usd: base, take_rate_pct: 17,
+          franchise_fee_usd: 0, ebitda_usd: 0
         });
       } else if (baseStore) {
         b.stores = b.stores.filter(s => s.type !== 'baseline');
@@ -2657,14 +2488,14 @@ document.getElementById('btn-save').addEventListener('click', () => {
       const newBrand = {
         id: newId, name, operator: op, investmentUsd: inv,
         baseline: base, baselineSigned: signed, maxSlots: MIN_BM_SLOTS,
-        stores: [], projections: []
+        stores: []
       };
       if (base > 0) {
         newBrand.stores.push({
           id: `${newId}-baseline`, name: `${name} Baseline`, type: 'baseline',
           slot: null, hub_id: null, hub_name: 'Baseline', city: '—',
-          gmv_mxn: base, take_rate_pct: 17,
-          franchise_fee_mxn: 0, ebitda_mxn: 0
+          gmv_usd: base, take_rate_pct: 17,
+          franchise_fee_usd: 0, ebitda_usd: 0
         });
       }
       state.data.brands.push(newBrand);
@@ -2695,6 +2526,31 @@ document.getElementById('btn-save').addEventListener('click', () => {
     }
     saveAll(); closeModal(); render();
   }
+
+  else if (ctx.type === 'goal') {
+    const name = document.getElementById('mg-name').value.trim();
+    const metric = document.getElementById('mg-metric').value;
+    const value = parseFloat(document.getElementById('mg-value').value) || 0;
+    const date = document.getElementById('mg-date').value || null;
+    const owner = document.getElementById('mg-owner').value.trim();
+    const status = document.getElementById('mg-status').value;
+    const notes = document.getElementById('mg-notes').value.trim();
+    if (!name) { alert('Dale un nombre'); return; }
+
+    state.goals = state.goals || [];
+    if (ctx.goalId) {
+      const g = state.goals.find(x => x.id === ctx.goalId);
+      if (g) Object.assign(g, { name, metric, target_value: value, target_date: date, owner, status, notes });
+    } else {
+      state.goals.push({
+        id: crypto.randomUUID(),
+        name, metric, target_value: value, target_date: date, owner, status, notes,
+        sort_order: state.goals.length + 1
+      });
+      toast(`Meta "${name}" agregada`, 'ok');
+    }
+    saveAll(); closeModal(); render(); openManageGoalsModal();
+  }
 });
 
 // ---- DELETE HANDLER ----
@@ -2715,16 +2571,9 @@ document.getElementById('btn-delete').addEventListener('click', () => {
     saveAll(); closeModal(); render();
   }
 
-  else if (ctx.type === 'projection') {
-    if (!confirm('¿Eliminar este plan?')) return;
-    const brand = state.data.brands.find(b => b.id === ctx.brandId);
-    brand.projections = (brand.projections || []).filter(p => p.id !== ctx.projId);
-    saveAll(); closeModal(); render();
-  }
-
   else if (ctx.type === 'brand') {
     const brand = state.data.brands.find(b => b.id === ctx.brandId);
-    if (!confirm(`¿Eliminar el brand "${brand.name}" con todos sus stores y proyecciones? Esta acción no se puede deshacer.`)) return;
+    if (!confirm(`¿Eliminar el brand "${brand.name}" con todos sus stores? Esta acción no se puede deshacer.`)) return;
     state.data.brands = state.data.brands.filter(b => b.id !== ctx.brandId);
     toast(`Brand "${brand.name}" eliminado`, 'warn');
     saveAll(); closeModal(); render();
@@ -2732,14 +2581,22 @@ document.getElementById('btn-delete').addEventListener('click', () => {
 
   else if (ctx.type === 'dk') {
     const hub = state.data.hubs.find(h => h.id === ctx.hubId);
-    if (!confirm(`¿Eliminar DK "${hub.name}"? Se borrarán todos los stores y proyecciones en este hub across todas las brands.`)) return;
+    if (!confirm(`¿Eliminar DK "${hub.name}"? Se borrarán todos los stores en este hub across todas las brands.`)) return;
     state.data.hubs = state.data.hubs.filter(h => h.id !== ctx.hubId);
     state.data.brands.forEach(b => {
       b.stores = b.stores.filter(s => s.hub_id !== ctx.hubId);
-      b.projections = (b.projections || []).filter(p => p.column !== `dk-${ctx.hubId}`);
     });
     toast(`DK "${hub.name}" eliminado`, 'warn');
     saveAll(); closeModal(); render();
+  }
+
+  else if (ctx.type === 'goal') {
+    if (!confirm('¿Eliminar esta meta?')) return;
+    state.goals = state.goals.filter(g => g.id !== ctx.goalId);
+    sb.from('goals').delete().eq('id', ctx.goalId);
+    toast('Meta eliminada', 'warn');
+    saveAll(); closeModal(); render();
+    if (state.modalCtx === null) openManageGoalsModal();
   }
 });
 
@@ -2747,27 +2604,6 @@ document.getElementById('btn-cancel').addEventListener('click', closeModal);
 document.getElementById('modal-backdrop').addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('visible')) closeModal(); });
 
-// ---- VIEW MODE + CONTROLS ----
-function setViewMode(mode) {
-  state.viewMode = mode;
-  document.getElementById('mode-actual').classList.toggle('active', mode === 'actual');
-  document.getElementById('mode-planned').classList.toggle('active', mode === 'planned');
-  saveAll(); render();
-}
-document.getElementById('mode-actual').addEventListener('click', () => setViewMode('actual'));
-document.getElementById('mode-planned').addEventListener('click', () => setViewMode('planned'));
-
-document.querySelectorAll('.ccy-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.ccy-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    state.currency = btn.dataset.ccy;
-    saveAll(); render();
-  });
-});
-document.getElementById('fx-input').addEventListener('input', (e) => {
-  const v = parseFloat(e.target.value); if (v && v > 0) { state.fx = v; saveAll(); render(); }
-});
 document.getElementById('sheets-url-input').addEventListener('input', (e) => {
   state.sheetsUrl = e.target.value.trim(); saveAll();
 });
@@ -2794,58 +2630,37 @@ document.getElementById('bulk-baseline-none').addEventListener('click', () => {
   state.data.brands.forEach(b => { b.baselineSigned = false; });
   saveAll(); render();
 });
-document.getElementById('clear-projections').addEventListener('click', () => {
-  if (!confirm('¿Borrar TODOS los planes?')) return;
-  state.data.brands.forEach(b => { b.projections = []; });
-  saveAll(); render();
-});
 document.getElementById('btn-add-brand').addEventListener('click', () => openBrandEditModal(null));
 document.getElementById('btn-manage-dks').addEventListener('click', openManageDksModal);
+document.getElementById('btn-manage-goals').addEventListener('click', openManageGoalsModal);
 document.getElementById('btn-sync').addEventListener('click', syncToSheets);
 document.getElementById('btn-load').addEventListener('click', loadFromSheets);
 
 // ---- INIT ----
 (async function init() {
-  // 1. Try localStorage first for instant render
   const cached = loadAll();
   if (cached && cached.data && cached.data.brands && cached.data.hubs) {
     state.data = cached.data;
-    if (cached.settings) {
-      if (cached.settings.fx) state.fx = cached.settings.fx;
-      if (cached.settings.currency) state.currency = cached.settings.currency;
-      if (cached.settings.sheetsUrl) state.sheetsUrl = cached.settings.sheetsUrl;
-      if (cached.settings.viewMode) state.viewMode = cached.settings.viewMode;
-    }
+    if (cached.goals) state.goals = cached.goals;
+    if (cached.settings && cached.settings.sheetsUrl) state.sheetsUrl = cached.settings.sheetsUrl;
   } else {
     state.data = seedData();
   }
 
-  // Reflect loaded state in UI
-  document.getElementById('fx-input').value = state.fx.toFixed(2);
-  document.querySelectorAll('.ccy-btn').forEach(b => b.classList.toggle('active', b.dataset.ccy === state.currency));
   if (state.sheetsUrl) document.getElementById('sheets-url-input').value = state.sheetsUrl;
-  setViewMode(state.viewMode);
+  render();
 
-  // 2. Then try Supabase — if data exists there, use it and re-render
   try {
     const remote = await loadFromSupabase();
     if (remote && remote.data && remote.data.brands && remote.data.brands.length > 0) {
       state.data = remote.data;
-      if (remote.settings) {
-        if (remote.settings.fx) state.fx = remote.settings.fx;
-        if (remote.settings.currency) state.currency = remote.settings.currency;
-        if (remote.settings.sheetsUrl) state.sheetsUrl = remote.settings.sheetsUrl;
-        if (remote.settings.viewMode) state.viewMode = remote.settings.viewMode;
-      }
-      document.getElementById('fx-input').value = state.fx.toFixed(2);
-      document.querySelectorAll('.ccy-btn').forEach(b => b.classList.toggle('active', b.dataset.ccy === state.currency));
+      state.goals = remote.goals || [];
+      if (remote.settings && remote.settings.sheetsUrl) state.sheetsUrl = remote.settings.sheetsUrl;
       if (state.sheetsUrl) document.getElementById('sheets-url-input').value = state.sheetsUrl;
-      setViewMode(state.viewMode);
-      // Update localStorage cache
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ data: state.data, settings: { fx: state.fx, currency: state.currency, sheetsUrl: state.sheetsUrl, viewMode: state.viewMode } }));
+      render();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ data: state.data, goals: state.goals, settings: { sheetsUrl: state.sheetsUrl } }));
       console.log('Loaded from Supabase');
     } else {
-      // No data in Supabase yet — push local/seed data up
       saveToSupabase();
       console.log('Seeded Supabase with local data');
     }
