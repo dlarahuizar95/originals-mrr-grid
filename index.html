@@ -1669,10 +1669,6 @@ function render() {
     rh.innerHTML = `
       <div class="brand-name">${brand.name}</div>
       <div class="brand-op">${brand.operator}</div>
-      <div class="brand-mrr">
-        <span>${fmtCcyNoSuffix(brand.mrr)}</span>
-        <span class="pct">${(goalMrr > 0 ? (brand.mrr/goalMrr)*100 : 0).toFixed(1)}%</span>
-      </div>
       ${hasBaseline ? `
         <div class="toggle-baseline ${brand.baselineSigned ? 'active' : ''}" data-brand-id="${brand.id}">
           <span class="dot"></span>
