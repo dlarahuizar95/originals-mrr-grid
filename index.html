@@ -802,6 +802,238 @@
     font-size: 10px; color: var(--muted);
     text-transform: uppercase; letter-spacing: 0.1em;
   }
+
+  /* ===== GANTT CHART OVERLAY ===== */
+  .gantt-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(15, 14, 13, 0.55);
+    backdrop-filter: blur(3px);
+    z-index: 250;
+    display: none;
+    align-items: flex-start; justify-content: center;
+    overflow-y: auto;
+  }
+  .gantt-backdrop.visible { display: flex; }
+  .gantt-sheet {
+    background: var(--paper);
+    width: min(1640px, 96vw);
+    margin: 24px auto;
+    border: 2px solid var(--rule);
+    box-shadow: 0 12px 48px rgba(0,0,0,0.35);
+    position: relative;
+  }
+  .gantt-header {
+    border-bottom: 2px solid var(--rule);
+    padding: 18px 24px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--paper-warm);
+  }
+  .gantt-title {
+    font-family: 'DM Serif Display', serif; font-weight: 900;
+    font-size: 24px; letter-spacing: -0.01em;
+  }
+  .gantt-title em { font-style: italic; color: var(--dk); font-weight: 500; }
+  .gantt-sub {
+    font-family: 'Roboto Mono', monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--muted); margin-top: 4px;
+  }
+  .gantt-close {
+    background: var(--ink); color: var(--paper);
+    border: none; padding: 8px 16px; cursor: pointer;
+    font-family: 'Roboto Mono', monospace; font-size: 10px;
+    font-weight: 700; letter-spacing: 0.14em;
+  }
+  .gantt-close:hover { background: var(--accent); }
+  .gantt-body { padding: 20px 24px 28px; }
+
+  /* Hub picker (cards grid) */
+  .gantt-hubs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .gantt-hub-card {
+    border: 1px solid var(--hairline-strong);
+    background: var(--paper);
+    padding: 14px 16px; cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .gantt-hub-card:hover {
+    background: var(--paper-warm);
+    border-color: var(--dk);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .gantt-hub-card .gh-name {
+    font-family: 'DM Serif Display', serif; font-weight: 700;
+    font-size: 18px; line-height: 1.1; color: var(--ink);
+  }
+  .gantt-hub-card .gh-city {
+    font-family: 'Roboto Mono', monospace; font-size: 9px;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--muted); margin-top: 2px;
+  }
+  .gantt-hub-card .gh-occ {
+    margin-top: 10px;
+    font-family: 'Roboto Mono', monospace; font-size: 11px;
+    color: var(--ink-soft);
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .gantt-hub-card .gh-occ strong {
+    font-size: 22px; color: var(--dk); font-weight: 700;
+  }
+  .gantt-hub-card .gh-bar {
+    margin-top: 8px; height: 6px; background: var(--hairline);
+    position: relative; overflow: hidden;
+  }
+  .gantt-hub-card .gh-bar-fill {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: var(--dk); transition: width 0.4s;
+  }
+  .gantt-hub-card .gh-hint {
+    margin-top: 8px;
+    font-family: 'Roboto Mono', monospace; font-size: 9px;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--muted);
+  }
+
+  /* Detail view */
+  .gantt-detail-bar {
+    display: flex; align-items: center; gap: 14px;
+    padding: 10px 0 16px;
+    border-bottom: 1px solid var(--hairline-strong);
+    margin-bottom: 16px;
+  }
+  .gantt-back {
+    background: transparent; border: 1px solid var(--rule);
+    padding: 6px 12px; cursor: pointer;
+    font-family: 'Roboto Mono', monospace; font-size: 10px;
+    font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .gantt-back:hover { background: var(--ink); color: var(--paper); }
+  .gantt-detail-title {
+    font-family: 'DM Serif Display', serif; font-weight: 700;
+    font-size: 20px; line-height: 1;
+  }
+  .gantt-detail-meta {
+    margin-left: auto;
+    font-family: 'Roboto Mono', monospace; font-size: 10px;
+    color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .gantt-cap-input {
+    font-family: 'Roboto Mono', monospace; font-size: 11px;
+    padding: 4px 8px; width: 60px; text-align: center;
+    border: 1px solid var(--hairline-strong);
+    background: var(--paper); color: var(--ink);
+  }
+
+  .gantt-chart {
+    display: grid;
+    border: 1px solid var(--hairline-strong);
+    overflow-x: auto;
+    background: var(--paper);
+  }
+  .gantt-row {
+    display: contents;
+  }
+  .gantt-cell {
+    border-right: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+    min-height: 38px;
+    position: relative;
+    font-family: 'Roboto Mono', monospace; font-size: 10px;
+  }
+  .gantt-cell.head {
+    background: var(--paper-warm);
+    padding: 8px 6px;
+    text-align: center;
+    font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    border-bottom: 2px solid var(--rule);
+    font-size: 9px;
+  }
+  .gantt-cell.head.year-start {
+    border-left: 2px solid var(--rule);
+    background: var(--paper-deep);
+    color: var(--ink);
+  }
+  .gantt-cell.row-label {
+    background: var(--paper-warm);
+    padding: 6px 10px;
+    display: flex; flex-direction: column; justify-content: center;
+    border-right: 2px solid var(--rule);
+    font-size: 11px;
+  }
+  .gantt-cell.row-label .gr-slot {
+    font-size: 9px; color: var(--muted); letter-spacing: 0.1em;
+    text-transform: uppercase; font-weight: 700;
+  }
+  .gantt-cell.row-label .gr-brand {
+    font-family: 'Inter', sans-serif; font-weight: 600;
+    color: var(--ink); margin-top: 1px;
+  }
+  .gantt-cell.row-label .gr-brand.empty {
+    color: var(--muted); font-style: italic; font-weight: 400;
+  }
+  .gantt-cell.month-cell {
+    background: var(--paper);
+  }
+  .gantt-cell.month-cell.current {
+    background: rgba(255, 74, 28, 0.04);
+  }
+  .gantt-cell.month-cell.year-start {
+    border-left: 2px solid var(--hairline-strong);
+  }
+  .gantt-cell.month-cell.empty-slot {
+    background: var(--empty);
+  }
+  .gantt-bar {
+    position: absolute;
+    top: 6px; bottom: 6px;
+    background: var(--dk);
+    border-left: 2px solid var(--accent-dk);
+    color: var(--paper);
+    padding: 0 8px;
+    display: flex; align-items: center;
+    font-family: 'Roboto Mono', monospace; font-size: 10px;
+    font-weight: 700; letter-spacing: 0.04em;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    z-index: 2;
+  }
+  .gantt-bar.future { background: var(--projected); border-left-color: var(--projected-dk); }
+  .gantt-bar.empty {
+    background: repeating-linear-gradient(45deg, var(--hairline) 0 6px, transparent 6px 12px);
+    color: var(--muted);
+    border-left: 2px dashed var(--hairline-strong);
+    box-shadow: none;
+  }
+  .gantt-now-line {
+    position: absolute; top: 0; bottom: 0;
+    width: 2px; background: var(--accent);
+    z-index: 3; pointer-events: none;
+  }
+  .gantt-legend {
+    display: flex; gap: 18px; margin-top: 14px;
+    font-family: 'Roboto Mono', monospace; font-size: 10px;
+    color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase;
+    flex-wrap: wrap;
+  }
+  .gantt-legend-item { display: flex; align-items: center; gap: 6px; }
+  .gantt-legend-swatch {
+    width: 14px; height: 12px; display: inline-block;
+  }
+  .gantt-legend-swatch.live { background: var(--dk); }
+  .gantt-legend-swatch.future { background: var(--projected); }
+  .gantt-legend-swatch.empty {
+    background: repeating-linear-gradient(45deg, var(--hairline) 0 4px, transparent 4px 8px);
+    border: 1px dashed var(--hairline-strong);
+  }
+  .gantt-legend-swatch.now { background: var(--accent); width: 3px; height: 12px; }
 </style>
 </head>
 <body>
@@ -895,6 +1127,7 @@
       <div class="filter-group">
         <button class="chip primary" id="btn-add-brand">+ Brand</button>
         <button class="chip" id="btn-manage-dks">◆ Manage DKs</button>
+        <button class="chip" id="btn-gantt">▦ Gantt Chart</button>
         <button class="chip" id="btn-manage-goals">◎ Metas</button>
       </div>
     </div>
@@ -954,6 +1187,20 @@
         <button class="btn primary" id="btn-save">Guardar</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Gantt overlay -->
+<div class="gantt-backdrop" id="gantt-backdrop">
+  <div class="gantt-sheet">
+    <div class="gantt-header">
+      <div>
+        <div class="gantt-title" id="gantt-title">Capacity <em>Gantt</em></div>
+        <div class="gantt-sub" id="gantt-subtitle">Planeación de slots por Dark Kitchen</div>
+      </div>
+      <button class="gantt-close" id="gantt-close">Cerrar ✕</button>
+    </div>
+    <div class="gantt-body" id="gantt-body"></div>
   </div>
 </div>
 
@@ -1134,13 +1381,27 @@ async function saveToSupabase() {
         builder: h.builder || 'Rappi',
         operator: h.operator || 'Rappi',
         capex_usd: h.capex_usd || 0,
-        always_show: !!h.alwaysShow
+        always_show: !!h.alwaysShow,
+        slot_capacity: parseInt(h.slotCapacity, 10) || null
       }));
       const { error } = await sb.from('hubs').upsert(fullHubs, { onConflict: 'id' });
       if (error) {
-        const fallback = hubs.map(h => ({ id: h.id, name: h.name, city: h.city }));
-        await sb.from('hubs').upsert(fallback, { onConflict: 'id' });
-        console.warn('Supabase: hubs.builder / operator / capex_usd / always_show columns missing — synced without them. Add the columns to persist.');
+        // Retry without slot_capacity (column may not exist yet)
+        const withoutCap = hubs.map(h => ({
+          id: h.id, name: h.name, city: h.city,
+          builder: h.builder || 'Rappi',
+          operator: h.operator || 'Rappi',
+          capex_usd: h.capex_usd || 0,
+          always_show: !!h.alwaysShow
+        }));
+        const { error: err2 } = await sb.from('hubs').upsert(withoutCap, { onConflict: 'id' });
+        if (err2) {
+          const fallback = hubs.map(h => ({ id: h.id, name: h.name, city: h.city }));
+          await sb.from('hubs').upsert(fallback, { onConflict: 'id' });
+          console.warn('Supabase: hubs.builder / operator / capex_usd / always_show / slot_capacity columns missing — synced without them. Add the columns to persist.');
+        } else {
+          console.warn('Supabase: hubs.slot_capacity column missing — capacities only saved locally. Add the column to persist.');
+        }
       }
     }
 
@@ -1227,7 +1488,8 @@ async function loadFromSupabase() {
       builder: h.builder || 'Rappi',
       operator: h.operator || 'Rappi',
       capex_usd: Number(h.capex_usd) || 0,
-      alwaysShow: !!h.always_show
+      alwaysShow: !!h.always_show,
+      slotCapacity: h.slot_capacity != null ? Number(h.slot_capacity) : null
     }));
     const brands = (brandsRes.data || []).map(b => ({
       id: b.id, name: b.name, operator: b.operator,
@@ -2746,6 +3008,223 @@ document.getElementById('btn-manage-dks').addEventListener('click', openManageDk
 document.getElementById('btn-manage-goals').addEventListener('click', openManageGoalsModal);
 document.getElementById('btn-sync').addEventListener('click', syncToSheets);
 document.getElementById('btn-load').addEventListener('click', loadFromSheets);
+
+// =====================================================================
+// GANTT CHART — Capacity planning per Dark Kitchen
+// =====================================================================
+const GANTT_DEFAULT_CAPACITY = 8;
+const GANTT_MONTHS_BACK = 6;
+const GANTT_MONTHS_FWD = 18;
+
+const ganttBackdrop = document.getElementById('gantt-backdrop');
+const ganttBody = document.getElementById('gantt-body');
+
+function openGanttModal() {
+  renderGanttHubsList();
+  ganttBackdrop.classList.add('visible');
+}
+
+function closeGanttModal() {
+  ganttBackdrop.classList.remove('visible');
+}
+
+function getHubCapacity(hub) {
+  return Math.max(1, parseInt(hub.slotCapacity, 10) || GANTT_DEFAULT_CAPACITY);
+}
+
+function getDkStoresInHub(hubId) {
+  const result = [];
+  state.data.brands.forEach(b => {
+    b.stores.forEach(s => {
+      if (s.type === 'dk' && s.hub_id === hubId) {
+        result.push({ store: s, brand: b });
+      }
+    });
+  });
+  // Order by open_date (oldest first; nulls last)
+  result.sort((a, b) => {
+    const da = a.store.open_date ? new Date(a.store.open_date).getTime() : Infinity;
+    const db = b.store.open_date ? new Date(b.store.open_date).getTime() : Infinity;
+    return da - db;
+  });
+  return result;
+}
+
+function buildMonthSeries() {
+  const months = [];
+  const start = new Date(CURRENT_DATE.getFullYear(), CURRENT_DATE.getMonth() - GANTT_MONTHS_BACK, 1);
+  for (let i = 0; i < GANTT_MONTHS_BACK + GANTT_MONTHS_FWD + 1; i++) {
+    const d = new Date(start.getFullYear(), start.getMonth() + i, 1);
+    months.push(d);
+  }
+  return months;
+}
+
+function fmtMonthShort(d) {
+  return d.toLocaleString('es-MX', { month: 'short' }).replace('.', '').toUpperCase();
+}
+
+function renderGanttHubsList() {
+  document.getElementById('gantt-title').innerHTML = 'Capacity <em>Gantt</em>';
+  document.getElementById('gantt-subtitle').textContent = `Planeación de slots · ${state.data.hubs.length} dark kitchens · Click en un DK para ver el detalle`;
+
+  const hubs = state.data.hubs.slice().sort((a,b) => (a.name||'').localeCompare(b.name||''));
+  if (hubs.length === 0) {
+    ganttBody.innerHTML = `<div style="padding:32px; text-align:center; color:var(--muted); font-family:'Roboto Mono',monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase;">No hay DKs todavía. Agregalas desde "◆ Manage DKs".</div>`;
+    return;
+  }
+
+  const cards = hubs.map(h => {
+    const cap = getHubCapacity(h);
+    const stores = getDkStoresInHub(h.id);
+    const used = Math.min(stores.length, cap);
+    const pct = Math.round((used / cap) * 100);
+    const nextOpen = stores.find(s => s.store.open_date && new Date(s.store.open_date) >= CURRENT_DATE);
+    const nextLabel = nextOpen
+      ? `Próxima apertura · ${new Date(nextOpen.store.open_date).toLocaleString('es-MX', { month: 'short', year: 'numeric' })}`
+      : (used >= cap ? 'Capacidad llena' : `${cap - used} slot${cap-used===1?'':'s'} libre${cap-used===1?'':'s'}`);
+    return `
+      <div class="gantt-hub-card" data-hub-id="${h.id}">
+        <div class="gh-name">◆ ${h.name}</div>
+        <div class="gh-city">${h.city || '—'}</div>
+        <div class="gh-occ"><span>Ocupación</span><span><strong>${used}</strong> / ${cap}</span></div>
+        <div class="gh-bar"><div class="gh-bar-fill" style="width:${pct}%"></div></div>
+        <div class="gh-hint">${nextLabel}</div>
+      </div>`;
+  }).join('');
+
+  ganttBody.innerHTML = `<div class="gantt-hubs-grid">${cards}</div>`;
+  ganttBody.querySelectorAll('.gantt-hub-card').forEach(card => {
+    card.addEventListener('click', () => renderGanttDetail(card.dataset.hubId));
+  });
+}
+
+function renderGanttDetail(hubId) {
+  const hub = state.data.hubs.find(h => h.id === hubId);
+  if (!hub) { renderGanttHubsList(); return; }
+
+  const cap = getHubCapacity(hub);
+  const stores = getDkStoresInHub(hubId);
+  const months = buildMonthSeries();
+
+  document.getElementById('gantt-title').innerHTML = `${hub.name} <em>· Gantt</em>`;
+  document.getElementById('gantt-subtitle').textContent = `${hub.city || '—'} · ${stores.length}/${cap} slots ocupados · ${months.length} meses`;
+
+  // Build grid: 1 label col + N month cols
+  const labelColWidth = 220;
+  const monthColWidth = 64;
+  const cols = `${labelColWidth}px repeat(${months.length}, ${monthColWidth}px)`;
+
+  const currentIdx = months.findIndex(m => m.getFullYear() === CURRENT_DATE.getFullYear() && m.getMonth() === CURRENT_DATE.getMonth());
+
+  // Header row
+  let html = `
+    <div class="gantt-detail-bar">
+      <button class="gantt-back" id="gantt-back">← Volver</button>
+      <div class="gantt-detail-title">◆ ${hub.name}</div>
+      <div class="gantt-detail-meta">
+        <label style="margin-right:6px;">Capacidad</label>
+        <input class="gantt-cap-input" id="gantt-cap-input" type="number" min="1" max="40" value="${cap}" />
+      </div>
+    </div>
+    <div class="gantt-chart" style="grid-template-columns: ${cols};">
+  `;
+
+  // Header
+  html += `<div class="gantt-cell head row-label" style="background:var(--paper-deep); border-bottom:2px solid var(--rule);">Slot / Brand</div>`;
+  months.forEach((m, i) => {
+    const isYearStart = m.getMonth() === 0;
+    const yearLabel = isYearStart ? `<div style="font-size:8px; color:var(--muted); margin-top:1px;">${m.getFullYear()}</div>` : '';
+    html += `<div class="gantt-cell head${isYearStart ? ' year-start' : ''}">${fmtMonthShort(m)}${yearLabel}</div>`;
+  });
+
+  // Slot rows
+  for (let slotIdx = 0; slotIdx < cap; slotIdx++) {
+    const item = stores[slotIdx];
+    const slotNum = String(slotIdx + 1).padStart(2, '0');
+    const isFilled = !!item;
+    const brandName = isFilled ? item.brand.name : '—';
+    const subLabel = isFilled
+      ? (item.store.open_date
+          ? new Date(item.store.open_date).toLocaleString('es-MX', { month:'short', year:'numeric' })
+          : 'sin fecha')
+      : 'vacante';
+
+    html += `
+      <div class="gantt-cell row-label">
+        <span class="gr-slot">Slot ${slotNum} · ${subLabel}</span>
+        <span class="gr-brand ${isFilled ? '' : 'empty'}">${brandName}</span>
+      </div>`;
+
+    // Find bar start/end columns
+    let startIdx = -1;
+    if (isFilled && item.store.open_date) {
+      const od = new Date(item.store.open_date);
+      const odMonthStart = new Date(od.getFullYear(), od.getMonth(), 1);
+      startIdx = months.findIndex(m => m.getFullYear() === odMonthStart.getFullYear() && m.getMonth() === odMonthStart.getMonth());
+      // If open_date is before our window, start at 0
+      if (startIdx === -1 && odMonthStart < months[0]) startIdx = 0;
+    } else if (isFilled && !item.store.open_date) {
+      // No date but slot filled — treat as "currently active": full span
+      startIdx = 0;
+    }
+
+    months.forEach((m, i) => {
+      const isYearStart = m.getMonth() === 0;
+      const isCurrent = i === currentIdx;
+      let cellCls = 'gantt-cell month-cell';
+      if (isYearStart) cellCls += ' year-start';
+      if (isCurrent) cellCls += ' current';
+      if (!isFilled) cellCls += ' empty-slot';
+
+      let inner = '';
+      // Only render the bar inside the cell where it starts
+      if (isFilled && i === startIdx) {
+        const spanCols = months.length - startIdx;
+        const widthPx = spanCols * monthColWidth - 6;
+        const od = item.store.open_date ? new Date(item.store.open_date) : null;
+        const isFuture = od && od > CURRENT_DATE;
+        const barCls = 'gantt-bar' + (isFuture ? ' future' : '');
+        const gmv = item.store.gmv_usd || 0;
+        const label = `${item.brand.name}${gmv > 0 ? ' · $' + (gmv >= 1000 ? (gmv/1000).toFixed(0)+'k' : gmv) : ''}`;
+        inner = `<div class="${barCls}" style="left:3px; width:${widthPx}px;" title="${item.brand.name} · ${item.store.name || ''} · open ${item.store.open_date || 'sin fecha'} · GMV ${gmv}">${label}</div>`;
+      }
+      html += `<div class="${cellCls}">${inner}</div>`;
+    });
+  }
+
+  html += `</div>`;
+
+  // Legend
+  html += `
+    <div class="gantt-legend">
+      <div class="gantt-legend-item"><span class="gantt-legend-swatch live"></span>Operando</div>
+      <div class="gantt-legend-item"><span class="gantt-legend-swatch future"></span>Forecast (open_date futuro)</div>
+      <div class="gantt-legend-item"><span class="gantt-legend-swatch empty"></span>Slot vacante</div>
+      <div class="gantt-legend-item"><span class="gantt-legend-swatch now"></span>Mes actual (${CURRENT_DATE.toLocaleString('es-MX', { month:'short', year:'numeric' })})</div>
+    </div>
+    <div style="margin-top:12px; font-family:'Roboto Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase;">
+      Tip: la fecha de apertura de cada brand se edita desde el grid principal (click en el bloque de la celda DK).
+    </div>
+  `;
+
+  ganttBody.innerHTML = html;
+
+  document.getElementById('gantt-back').addEventListener('click', renderGanttHubsList);
+  document.getElementById('gantt-cap-input').addEventListener('change', (e) => {
+    const v = Math.max(1, Math.min(40, parseInt(e.target.value, 10) || GANTT_DEFAULT_CAPACITY));
+    hub.slotCapacity = v;
+    saveAll();
+    renderGanttDetail(hubId);
+  });
+}
+
+document.getElementById('btn-gantt').addEventListener('click', openGanttModal);
+document.getElementById('gantt-close').addEventListener('click', closeGanttModal);
+ganttBackdrop.addEventListener('click', (e) => { if (e.target === ganttBackdrop) closeGanttModal(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && ganttBackdrop.classList.contains('visible')) closeGanttModal();
+});
 
 // ---- INIT ----
 (async function init() {
