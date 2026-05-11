@@ -849,12 +849,6 @@
       <div class="value capital-color" id="kpi-invested">$0</div>
       <div class="sub" id="kpi-invested-sub">Year-1 USD capital</div>
     </div>
-    <div class="goal-stat">
-      <div class="label">Capital Efficiency</div>
-      <div class="value capital-color" id="kpi-efficiency">—</div>
-      <div class="sub" id="kpi-efficiency-sub">MRR / Invested</div>
-    </div>
-
     <div class="progress-ribbon">
       <div class="progress-track">
         <div class="progress-fill baseline" id="progress-baseline" style="width: 0%"></div>
@@ -1524,10 +1518,6 @@ function render() {
   gapSub.className = 'sub ' + (requiredMom > 10 ? 'neg' : requiredMom > 5 ? '' : 'pos');
   document.getElementById('kpi-invested').textContent = fmtMoneyFull(totalInvestedUsd);
   document.getElementById('kpi-invested-sub').textContent = `Year-1 · ${brandTotals.filter(b => b.investmentUsd > 0).length} brands`;
-  document.getElementById('kpi-efficiency').textContent = portfolioMultiple !== null ? `${portfolioMultiple.toFixed(3)}×` : '—';
-  document.getElementById('kpi-efficiency-sub').textContent = portfolioMultiple !== null
-    ? `Forecast · Payback ${portfolioPayback ? portfolioPayback.toFixed(0) + 'm' : '—'}`
-    : 'Set investments';
 
   const baselinePct = goalMrr > 0 ? Math.min((baselineSigned/goalMrr)*100, 100) : 0;
   const growthPct = goalMrr > 0 ? Math.min((growthAll/goalMrr)*100, 100 - baselinePct) : 0;
