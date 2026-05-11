@@ -514,6 +514,23 @@
   .metric-payback.good { color: var(--baseline); font-weight: 700; }
   .metric-payback.bad { color: var(--accent-dk); font-weight: 700; }
 
+  /* 4 result columns (B&M Recovery · Franchisee Fees · GMV · Total) */
+  .cell.result-cell {
+    background: var(--paper-warm); padding: 8px 10px; display: flex;
+    flex-direction: column; justify-content: center; align-items: stretch;
+    text-align: right; min-height: 75px;
+  }
+  .cell.result-cell-group-start { border-left: 3px solid var(--rule); }
+  .cell.result-cell-total { background: var(--paper-deep); border-left: 1px solid var(--rule); }
+  .result-cell .result-value {
+    font-family: 'Roboto Mono', monospace; font-size: 13px; font-weight: 700; color: var(--ink);
+  }
+  .result-cell .result-empty {
+    font-family: 'Roboto Mono', monospace; font-size: 11px; color: var(--muted); font-style: italic;
+  }
+  .col-header.type-metric-group-start { border-left: 3px solid var(--rule); }
+  .col-header.type-metric-total { background: var(--paper-deep); }
+
   .tooltip {
     position: fixed; background: var(--ink); color: var(--paper);
     padding: 10px 14px; font-family: 'Roboto Mono', monospace; font-size: 11px;
@@ -1128,11 +1145,26 @@ async function saveToSupabase() {
     }
 
     for (const b of brands) {
-      await sb.from('brands').upsert({
+      const brandRow = {
         id: b.id, name: b.name, operator: b.operator,
         investment_usd: b.investmentUsd, baseline_usd: b.baseline,
-        baseline_signed: b.baselineSigned, max_slots: b.maxSlots
-      }, { onConflict: 'id' });
+        baseline_signed: b.baselineSigned, max_slots: b.maxSlots,
+        bm_recovery_usd: b.bmRecoveryUsd || 0,
+        franchisee_fees_usd: b.franchiseeFeesUsd || 0,
+        gmv_total_usd: b.gmvTotalUsd || 0,
+        mrr_total_usd: b.mrrTotalUsd || 0,
+        payback_months: b.paybackMonths || 0
+      };
+      const { error: brandErr } = await sb.from('brands').upsert(brandRow, { onConflict: 'id' });
+      if (brandErr) {
+        const fallback = {
+          id: b.id, name: b.name, operator: b.operator,
+          investment_usd: b.investmentUsd, baseline_usd: b.baseline,
+          baseline_signed: b.baselineSigned, max_slots: b.maxSlots
+        };
+        await sb.from('brands').upsert(fallback, { onConflict: 'id' });
+        console.warn('Supabase: brands result columns missing — synced without them.');
+      }
 
       await sb.from('stores').delete().eq('brand_id', b.id);
       if (b.stores.length) {
@@ -1200,6 +1232,11 @@ async function loadFromSupabase() {
       baseline: Number(b.baseline_usd) || 0,
       baselineSigned: b.baseline_signed,
       maxSlots: b.max_slots || 10,
+      bmRecoveryUsd: Number(b.bm_recovery_usd) || 0,
+      franchiseeFeesUsd: Number(b.franchisee_fees_usd) || 0,
+      gmvTotalUsd: Number(b.gmv_total_usd) || 0,
+      mrrTotalUsd: Number(b.mrr_total_usd) || 0,
+      paybackMonths: Number(b.payback_months) || 0,
       stores: (storesRes.data || []).filter(s => s.brand_id === b.id).map(s => ({
         id: s.id, name: s.name, type: s.type, slot: s.slot,
         hub_id: s.hub_id, hub_name: s.hub_name, city: s.city,
@@ -1517,7 +1554,7 @@ function render() {
     ...Array(maxSlotsGlobal).fill('100px'),
     ...visibleHubs.map(() => '110px'),
     '70px',
-    '130px'
+    '110px', '110px', '110px', '140px'
   ];
   grid.style.gridTemplateColumns = colWidths.join(' ');
 
@@ -1585,13 +1622,33 @@ function render() {
   addDk.onclick = () => openDkEditModal(null);
   grid.appendChild(addDk);
 
-  const mHead = document.createElement('div');
-  mHead.className = 'col-header type-metric';
-  mHead.innerHTML = `
-    <span class="col-title">Σ GMV · Multiple</span>
-    <span class="col-sub">GMV / Investment</span>
-  `;
-  grid.appendChild(mHead);
+  // ==== 4 RESULT COLUMNS (data from Supabase, brand-level) ====
+  const resultTotals = brandTotals.reduce((acc, b) => {
+    acc.bmRecovery += b.bmRecoveryUsd || 0;
+    acc.franchiseeFees += b.franchiseeFeesUsd || 0;
+    acc.gmvTotal += b.gmvTotalUsd || 0;
+    acc.mrrTotal += b.mrrTotalUsd || 0;
+    return acc;
+  }, { bmRecovery: 0, franchiseeFees: 0, gmvTotal: 0, mrrTotal: 0 });
+  const resultInvested = brandTotals.reduce((s, b) => s + (b.investmentUsd || 0), 0);
+  const resultMultiple = resultInvested > 0 ? (resultTotals.mrrTotal / resultInvested) : null;
+
+  const resHeaders = [
+    { title: 'B&M Recovery',     sub: 'USD',                  total: resultTotals.bmRecovery,     groupStart: true },
+    { title: 'Franchisee Fees',  sub: 'USD',                  total: resultTotals.franchiseeFees, groupStart: false },
+    { title: 'GMV',              sub: 'USD',                  total: resultTotals.gmvTotal,       groupStart: false },
+    { title: 'Total',            sub: 'MRR / Inv · Payback',  total: resultTotals.mrrTotal,       groupStart: false, isTotal: true }
+  ];
+  resHeaders.forEach(h => {
+    const head = document.createElement('div');
+    head.className = 'col-header type-metric' + (h.groupStart ? ' type-metric-group-start' : '') + (h.isTotal ? ' type-metric-total' : '');
+    head.innerHTML = `
+      <span class="col-title">${h.title}</span>
+      <span class="col-sub">${h.sub}</span>
+      <span class="col-total">${h.total > 0 ? fmtCcyNoSuffix(h.total) : '—'}</span>
+    `;
+    grid.appendChild(head);
+  });
 
   // ==== BRAND ROWS ====
   brandTotals.forEach(brand => {
@@ -1721,20 +1778,43 @@ function render() {
     filler.style.borderLeft = 'none';
     grid.appendChild(filler);
 
-    const metricCell = document.createElement('div');
-    metricCell.className = 'cell metric-cell';
-    const multiple = computeMultiple(brand.mrr, brand.investmentUsd);
-    const payback = computePaybackMonths(brand.mrr, brand.investmentUsd, brand.blendedTake);
-    const multTier = tierForMultiple(multiple);
-    const payTier = payback === null ? 'null' : (payback <= 36 ? 'good' : payback <= 72 ? 'mid' : 'bad');
-    metricCell.innerHTML = `
-      <div class="metric-mrr">${fmtCcyNoSuffix(brand.mrr)}<span class="pct">${(goalMrr > 0 ? (brand.mrr/goalMrr)*100 : 0).toFixed(1)}%</span></div>
-      ${brand.revenueOther > 0 ? `<div class="metric-rev"><span class="rev-label">Rev</span>${fmtCcyNoSuffix(brand.revenueOther)}</div>` : ''}
-      <div class="metric-multiple ${multTier}">${multiple !== null ? `${multiple.toFixed(3)}×` : '—'}</div>
-      <div class="metric-label">GMV / Investment</div>
-      <div class="metric-payback ${payTier}">${payback !== null ? `Payback ${payback.toFixed(0)}m` : 'Set investment'}</div>
+    // ==== 4 RESULT CELLS (brand-level, from Supabase) ====
+    const bmRecCell = document.createElement('div');
+    bmRecCell.className = 'cell result-cell result-cell-group-start';
+    bmRecCell.innerHTML = brand.bmRecoveryUsd > 0
+      ? `<div class="result-value">${fmtCcyNoSuffix(brand.bmRecoveryUsd)}</div>`
+      : `<div class="result-empty">—</div>`;
+    grid.appendChild(bmRecCell);
+
+    const ffCell = document.createElement('div');
+    ffCell.className = 'cell result-cell';
+    ffCell.innerHTML = brand.franchiseeFeesUsd > 0
+      ? `<div class="result-value">${fmtCcyNoSuffix(brand.franchiseeFeesUsd)}</div>`
+      : `<div class="result-empty">—</div>`;
+    grid.appendChild(ffCell);
+
+    const gmvCell = document.createElement('div');
+    gmvCell.className = 'cell result-cell';
+    gmvCell.innerHTML = brand.gmvTotalUsd > 0
+      ? `<div class="result-value">${fmtCcyNoSuffix(brand.gmvTotalUsd)}</div>`
+      : `<div class="result-empty">—</div>`;
+    grid.appendChild(gmvCell);
+
+    const totalCell = document.createElement('div');
+    totalCell.className = 'cell result-cell result-cell-total';
+    const tMrr = brand.mrrTotalUsd || 0;
+    const tInv = brand.investmentUsd || 0;
+    const tMultiple = (tMrr > 0 && tInv > 0) ? (tMrr / tInv) : null;
+    const tPay = brand.paybackMonths || 0;
+    const tMultTier = tierForMultiple(tMultiple);
+    const tPayTier = tPay <= 0 ? 'null' : (tPay <= 36 ? 'good' : tPay <= 72 ? 'mid' : 'bad');
+    totalCell.innerHTML = `
+      <div class="metric-mrr">${tMrr > 0 ? fmtCcyNoSuffix(tMrr) : '—'}<span class="pct">${(goalMrr > 0 && tMrr > 0 ? (tMrr/goalMrr)*100 : 0).toFixed(1)}%</span></div>
+      <div class="metric-multiple ${tMultTier}">${tMultiple !== null ? `${tMultiple.toFixed(3)}×` : '—'}</div>
+      <div class="metric-label">MRR / Investment</div>
+      <div class="metric-payback ${tPayTier}">${tPay > 0 ? `Payback ${tPay.toFixed(0)}m` : '—'}</div>
     `;
-    grid.appendChild(metricCell);
+    grid.appendChild(totalCell);
   });
 
   // ==== ADD BRAND ROW ====
@@ -1744,7 +1824,7 @@ function render() {
   addBrandCell.onclick = () => openBrandEditModal(null);
   grid.appendChild(addBrandCell);
   // Fill rest of add-brand row with placeholders
-  const totalColsAfterBrand = 1 + 1 + maxSlotsGlobal + visibleHubs.length + 1 + 1; // inv, base, slots, hubs, addDk, metric
+  const totalColsAfterBrand = 1 + 1 + maxSlotsGlobal + visibleHubs.length + 1 + 4; // inv, base, slots, hubs, addDk, 4 result cols
   for (let i = 0; i < totalColsAfterBrand; i++) {
     const ph = document.createElement('div');
     ph.className = 'add-brand-row-placeholder';
@@ -1793,15 +1873,40 @@ function render() {
   addDkTotal.innerHTML = '';
   grid.appendChild(addDkTotal);
 
-  const pgt = document.createElement('div');
-  pgt.className = 'row-total';
-  pgt.style.background = 'var(--accent)';
-  pgt.style.color = 'var(--paper)';
-  pgt.style.borderLeft = '3px solid var(--rule)';
-  pgt.style.fontFamily = "'DM Serif Display', serif";
-  pgt.style.fontStyle = 'italic'; pgt.style.fontWeight = '700'; pgt.style.fontSize = '16px';
-  pgt.innerHTML = `${portfolioMultiple !== null ? `${portfolioMultiple.toFixed(3)}×` : fmtCcyNoSuffix(displayedMrr)}<span class="sub" style="color: rgba(245,241,234,0.9); font-family: 'Roboto Mono', monospace; font-style: normal;">${portfolioMultiple !== null ? fmtCcyNoSuffix(displayedMrr) : pctGoal.toFixed(1) + '% meta'}</span>`;
-  grid.appendChild(pgt);
+  // 4 result-column grand totals
+  const grandBmRec = document.createElement('div');
+  grandBmRec.className = 'row-total';
+  grandBmRec.style.background = 'var(--paper-deep)';
+  grandBmRec.style.borderLeft = '3px solid var(--rule)';
+  grandBmRec.innerHTML = resultTotals.bmRecovery > 0
+    ? `${fmtCcyNoSuffix(resultTotals.bmRecovery)}<span class="sub">USD</span>`
+    : `<span style="color: var(--muted);">—</span><span class="sub">vacío</span>`;
+  grid.appendChild(grandBmRec);
+
+  const grandFf = document.createElement('div');
+  grandFf.className = 'row-total';
+  grandFf.style.background = 'var(--paper-deep)';
+  grandFf.innerHTML = resultTotals.franchiseeFees > 0
+    ? `${fmtCcyNoSuffix(resultTotals.franchiseeFees)}<span class="sub">USD</span>`
+    : `<span style="color: var(--muted);">—</span><span class="sub">vacío</span>`;
+  grid.appendChild(grandFf);
+
+  const grandGmv = document.createElement('div');
+  grandGmv.className = 'row-total';
+  grandGmv.style.background = 'var(--paper-deep)';
+  grandGmv.innerHTML = resultTotals.gmvTotal > 0
+    ? `${fmtCcyNoSuffix(resultTotals.gmvTotal)}<span class="sub">USD</span>`
+    : `<span style="color: var(--muted);">—</span><span class="sub">vacío</span>`;
+  grid.appendChild(grandGmv);
+
+  const grandTotal = document.createElement('div');
+  grandTotal.className = 'row-total';
+  grandTotal.style.background = 'var(--accent)';
+  grandTotal.style.color = 'var(--paper)';
+  grandTotal.style.fontFamily = "'DM Serif Display', serif";
+  grandTotal.style.fontStyle = 'italic'; grandTotal.style.fontWeight = '700'; grandTotal.style.fontSize = '16px';
+  grandTotal.innerHTML = `${resultMultiple !== null ? `${resultMultiple.toFixed(3)}×` : fmtCcyNoSuffix(resultTotals.mrrTotal)}<span class="sub" style="color: rgba(245,241,234,0.9); font-family: 'Roboto Mono', monospace; font-style: normal;">${resultMultiple !== null ? fmtCcyNoSuffix(resultTotals.mrrTotal) : (goalMrr > 0 ? ((resultTotals.mrrTotal/goalMrr)*100).toFixed(1) + '% meta' : '—')}</span>`;
+  grid.appendChild(grandTotal);
 
   // Wire baseline toggles (stopPropagation so it doesn't trigger brand edit)
   document.querySelectorAll('.toggle-baseline').forEach(el => {
