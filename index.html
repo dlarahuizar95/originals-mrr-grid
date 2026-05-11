@@ -217,7 +217,8 @@
     font-variation-settings: 'opsz' 144;
     display: flex; align-items: flex-end;
     border-right: 2px solid var(--rule); border-bottom: 2px solid var(--rule);
-    position: sticky; left: 0; top: 0; z-index: 7;
+    position: sticky; left: 0; top: 0; z-index: 30;
+    box-shadow: 6px 0 8px -4px rgba(0,0,0,0.15);
   }
 
   .col-header {
@@ -225,7 +226,7 @@
     border-right: 1px solid var(--hairline); border-bottom: 2px solid var(--rule);
     text-align: center; font-family: 'Roboto Mono', monospace;
     font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em;
-    color: var(--ink-soft); position: sticky; top: 0; z-index: 5;
+    color: var(--ink-soft); position: sticky; top: 0; z-index: 20;
   }
   .col-header.type-investment {
     background: var(--investment); color: var(--paper); border-right: 3px solid var(--rule);
@@ -294,7 +295,8 @@
   .row-header {
     padding: 10px 12px; background: var(--paper-warm);
     border-right: 2px solid var(--rule); border-bottom: 1px solid var(--hairline);
-    position: sticky; left: 0; z-index: 4;
+    position: sticky; left: 0; z-index: 15;
+    box-shadow: 6px 0 8px -4px rgba(0,0,0,0.10);
     display: flex; flex-direction: column; justify-content: center;
     min-width: 200px; cursor: pointer;
   }
@@ -346,7 +348,8 @@
     padding: 14px; background: var(--paper);
     border-right: 2px solid var(--rule); border-top: 1px dashed var(--hairline-strong);
     border-bottom: 1px solid var(--hairline);
-    position: sticky; left: 0; z-index: 4;
+    position: sticky; left: 0; z-index: 15;
+    box-shadow: 6px 0 8px -4px rgba(0,0,0,0.10);
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; transition: all 0.15s;
     font-family: 'Roboto Mono', monospace; font-size: 11px;
@@ -583,7 +586,8 @@
   }
   .row-total.grand {
     background: var(--ink); color: var(--paper);
-    position: sticky; left: 0; z-index: 4; border-right: 2px solid var(--rule);
+    position: sticky; left: 0; z-index: 15; border-right: 2px solid var(--rule);
+    box-shadow: 6px 0 8px -4px rgba(0,0,0,0.20);
     font-family: 'DM Serif Display', serif; font-weight: 700; font-style: italic;
     font-size: 15px; font-variation-settings: 'opsz' 144;
   }
