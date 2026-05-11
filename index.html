@@ -205,7 +205,8 @@
 
   .grid-wrapper {
     background: var(--paper); border: 1px solid var(--hairline-strong);
-    overflow-x: auto; position: relative;
+    overflow: auto; position: relative;
+    max-height: calc(100vh - 120px);
   }
   .grid { display: grid; min-width: 100%; }
 
@@ -216,7 +217,7 @@
     font-variation-settings: 'opsz' 144;
     display: flex; align-items: flex-end;
     border-right: 2px solid var(--rule); border-bottom: 2px solid var(--rule);
-    position: sticky; left: 0; z-index: 5;
+    position: sticky; left: 0; top: 0; z-index: 7;
   }
 
   .col-header {
@@ -224,7 +225,7 @@
     border-right: 1px solid var(--hairline); border-bottom: 2px solid var(--rule);
     text-align: center; font-family: 'Roboto Mono', monospace;
     font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em;
-    color: var(--ink-soft); position: relative;
+    color: var(--ink-soft); position: sticky; top: 0; z-index: 5;
   }
   .col-header.type-investment {
     background: var(--investment); color: var(--paper); border-right: 3px solid var(--rule);
