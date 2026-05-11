@@ -1659,7 +1659,6 @@ function render() {
   brandTotals.forEach(brand => {
     const rh = document.createElement('div');
     rh.className = 'row-header';
-    rh.style.position = 'relative';
     const hasBaseline = brand.baseline > 0;
     rh.innerHTML = `
       <div class="brand-name">${brand.name}</div>
