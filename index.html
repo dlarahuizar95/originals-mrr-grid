@@ -1494,7 +1494,9 @@ function render() {
   const brandsInvestedUsd = brandTotals.reduce((s,b) => s + (b.investmentUsd || 0), 0);
   const totalInvestedUsd = brandsInvestedUsd;
 
-  const displayedMrr = baselineSigned + growthAll;
+  // MRR Forecast = B&M Recovery + Franchisee Fees + GMV (brand-level Supabase fields)
+  const displayedMrr = brandTotals.reduce((s, b) =>
+    s + (b.bmRecoveryUsd || 0) + (b.franchiseeFeesUsd || 0) + (b.gmvTotalUsd || 0), 0);
   const portfolioTake = brandTotals.reduce((s,b) => s + b.take, 0);
   const blendedTakePct = displayedMrr > 0 ? (portfolioTake / displayedMrr) * 100 : 0;
   const totalStoresReal = brands.reduce((s,b) => s + b.stores.filter(x => x.type !== 'baseline').length, 0);
