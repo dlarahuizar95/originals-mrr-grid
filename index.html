@@ -1172,9 +1172,12 @@ async function saveToSupabase() {
         console.warn('Supabase: brands result columns missing — synced without them.');
       }
 
-      await sb.from('stores').delete().eq('brand_id', b.id);
-      if (b.stores.length) {
-        await sb.from('stores').insert(b.stores.map(s => ({
+      // SAFETY: never wipe a brand's stores from a save cycle. If the local
+      // copy has empty stores (e.g. stale cache) the old delete-then-insert
+      // pattern destroyed real Supabase data. Upsert any local stores we have
+      // and leave the rest alone — orphan cleanup must be explicit, not implicit.
+      if (b.stores && b.stores.length) {
+        await sb.from('stores').upsert(b.stores.map(s => ({
           id: s.id, brand_id: b.id, name: s.name, type: s.type,
           slot: s.slot, hub_id: s.hub_id, hub_name: s.hub_name,
           city: s.city,
@@ -1182,7 +1185,7 @@ async function saveToSupabase() {
           franchise_fee_usd: s.franchise_fee_usd || 0,
           ebitda_usd: s.ebitda_usd || 0,
           open_date: s.open_date || null
-        })));
+        })), { onConflict: 'id' });
       }
     }
 
