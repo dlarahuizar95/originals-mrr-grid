@@ -1492,8 +1492,7 @@ function render() {
 
   const growthAll = bmTotalAll + dkTotalAll;
   const brandsInvestedUsd = brandTotals.reduce((s,b) => s + (b.investmentUsd || 0), 0);
-  const rappiHubsCapexUsd = hubs.reduce((s,h) => s + ((h.builder || 'Rappi').trim().toLowerCase() === 'rappi' ? (h.capex_usd || 0) : 0), 0);
-  const totalInvestedUsd = brandsInvestedUsd + rappiHubsCapexUsd;
+  const totalInvestedUsd = brandsInvestedUsd;
 
   const displayedMrr = baselineSigned + growthAll;
   const portfolioTake = brandTotals.reduce((s,b) => s + b.take, 0);
