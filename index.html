@@ -1638,7 +1638,7 @@ function render() {
     acc.bmRecovery += b.bmRecoveryUsd || 0;
     acc.franchiseeFees += b.franchiseeFeesUsd || 0;
     acc.gmvTotal += b.gmvTotalUsd || 0;
-    acc.mrrTotal += b.mrrTotalUsd || 0;
+    acc.mrrTotal += (b.bmRecoveryUsd || 0) + (b.franchiseeFeesUsd || 0) + (b.gmvTotalUsd || 0);
     return acc;
   }, { bmRecovery: 0, franchiseeFees: 0, gmvTotal: 0, mrrTotal: 0 });
   const resultInvested = brandTotals.reduce((s, b) => s + (b.investmentUsd || 0), 0);
@@ -1818,7 +1818,7 @@ function render() {
 
     const totalCell = document.createElement('div');
     totalCell.className = 'cell result-cell result-cell-total';
-    const tMrr = brand.mrrTotalUsd || 0;
+    const tMrr = (brand.bmRecoveryUsd || 0) + (brand.franchiseeFeesUsd || 0) + (brand.gmvTotalUsd || 0);
     const tInv = brand.investmentUsd || 0;
     const tMultiple = (tMrr > 0 && tInv > 0) ? (tMrr / tInv) : null;
     const tPay = brand.paybackMonths || 0;
