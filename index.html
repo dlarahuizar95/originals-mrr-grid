@@ -1518,7 +1518,7 @@ function render() {
   const gapSub = document.getElementById('kpi-gap-sub');
   gapSub.textContent = `+${requiredMom.toFixed(1)}% MoM requerido`;
   gapSub.className = 'sub ' + (requiredMom > 10 ? 'neg' : requiredMom > 5 ? '' : 'pos');
-  document.getElementById('kpi-invested').textContent = fmtUsd(totalInvestedUsd);
+  document.getElementById('kpi-invested').textContent = fmtMoneyFull(totalInvestedUsd);
   document.getElementById('kpi-invested-sub').textContent = `Year-1 · ${brandTotals.filter(b => b.investmentUsd > 0).length} brands`;
   document.getElementById('kpi-efficiency').textContent = portfolioMultiple !== null ? `${portfolioMultiple.toFixed(3)}×` : '—';
   document.getElementById('kpi-efficiency-sub').textContent = portfolioMultiple !== null
@@ -1545,7 +1545,7 @@ function render() {
   document.getElementById('foot-baseline-bd').textContent = `${signedCount} firmadas`;
   document.getElementById('foot-growth').textContent = fmtCcyNoSuffix(growthAll);
   document.getElementById('foot-growth-bd').textContent = `B&M ${fmtCcyNoSuffix(bmTotalAll)} · DK ${fmtCcyNoSuffix(dkTotalAll)}`;
-  document.getElementById('foot-invested').textContent = fmtUsd(totalInvestedUsd);
+  document.getElementById('foot-invested').textContent = fmtMoneyFull(totalInvestedUsd);
   document.getElementById('foot-invested-bd').textContent = `Year-1 USD`;
   document.getElementById('foot-multiple').textContent = portfolioMultiple !== null ? `${portfolioMultiple.toFixed(3)}×` : '—';
   document.getElementById('foot-multiple-bd').textContent = portfolioPayback ? `Payback ${portfolioPayback.toFixed(0)}m @ ${blendedTakePct.toFixed(0)}% take` : 'Set investments';
@@ -1579,7 +1579,7 @@ function render() {
   invHead.innerHTML = `
     <span class="col-title">◉ INVESTMENT</span>
     <span class="col-sub">Year-1 USD</span>
-    <span class="col-total">${fmtUsd(totalInvestedUsd)}</span>
+    <span class="col-total">${fmtMoneyFull(totalInvestedUsd)}</span>
   `;
   grid.appendChild(invHead);
 
@@ -1690,11 +1690,21 @@ function render() {
     const invCell = document.createElement('div');
     invCell.className = 'cell investment-cell';
     const invInput = document.createElement('input');
-    invInput.type = 'number'; invInput.min = '0'; invInput.step = '1000';
-    invInput.value = brand.investmentUsd || ''; invInput.placeholder = '0';
+    invInput.type = 'text'; invInput.inputMode = 'numeric';
+    invInput.value = brand.investmentUsd > 0 ? fmtMoneyFull(brand.investmentUsd) : '';
+    invInput.placeholder = '$0';
     invInput.dataset.brandId = brand.id;
+    invInput.addEventListener('focus', (e) => {
+      const b = state.data.brands.find(x => x.id === e.target.dataset.brandId);
+      e.target.value = b && b.investmentUsd > 0 ? String(b.investmentUsd) : '';
+    });
+    invInput.addEventListener('blur', (e) => {
+      const b = state.data.brands.find(x => x.id === e.target.dataset.brandId);
+      e.target.value = b && b.investmentUsd > 0 ? fmtMoneyFull(b.investmentUsd) : '';
+    });
     invInput.addEventListener('input', (e) => {
-      const v = parseFloat(e.target.value) || 0;
+      const raw = (e.target.value || '').replace(/[^0-9.]/g, '');
+      const v = parseFloat(raw) || 0;
       const b = state.data.brands.find(x => x.id === e.target.dataset.brandId);
       if (b) { b.investmentUsd = v; saveAll(); clearTimeout(state.invDebounce); state.invDebounce = setTimeout(render, 400); }
     });
@@ -1845,7 +1855,7 @@ function render() {
 
   const invGrand = document.createElement('div');
   invGrand.className = 'row-total investment-col';
-  invGrand.innerHTML = `${fmtUsd(totalInvestedUsd)}<span class="sub">year-1 USD</span>`;
+  invGrand.innerHTML = `${fmtMoneyFull(totalInvestedUsd)}<span class="sub">year-1 USD</span>`;
   grid.appendChild(invGrand);
 
   const bGrand = document.createElement('div');
